@@ -257,21 +257,9 @@ function generateArticlePage(articleSlug) {
         body {
           margin: 0;
           font-family: 'Georgia', 'Times New Roman', serif;
-          background: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAF0AoADASIAAhEBAxEB/8QAGwABAAMBAQEBAAAAAAAAAAAAAAECAwQFBgf/xABBEAABBAECBAMFBgMGBwEBAAABAAIDEQQhMRJBUWETInEGFIGRoSMyUrHB0UJicgcVM4Wi4RJDU5KywvBjc+Ik/QQAGgEBAAMBAQEAAAAAAAAAAAAAAAECAwQFBv/EADARAAICAQQBAgQFAwUAAAAAAAABAgMRBBIhMUEFEyJRMmFxgZGhsdHB4fAUIyQzUv/aAAwDAQACEQMRAD8A') no-repeat center center fixed;
-          background-size: cover;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
           color: #333;
           line-height: 1.7;
-        }
-        
-        body::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(45deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
-          z-index: -1;
         }
         
         .article-container {
@@ -474,21 +462,9 @@ function generateMainPage() {
         
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-          background: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAF0AoADASIAAhEBAxEB/8QAGwABAAMBAQEBAAAAAAAAAAAAAAECAwQFBgf/xABBEAABBAECBAMFBgMGBwEBAAABAAIDEQQhMRJBUWETInEGFIGRoSMyUrHB0UJicgcVM4Wi4RJDU5KywvBjc+Ik/QQAGgEBAAMBAQEAAAAAAAAAAAAAAAECAwQFBv/EADARAAICAQQBAgQFAwUAAAAAAAABAgMRBBIhMUEFEyJRMmFxgZGhsdHB4fAUIyQzUv/aAAwDAQACEQMRAD8A') no-repeat center center fixed;
-          background-size: cover;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
           color: #1f2937;
           line-height: 1.6;
-        }
-        
-        body::before {
-          content: '';
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(45deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
-          z-index: -1;
         }
         
         .main-nav {
@@ -865,7 +841,6 @@ function generateMainPage() {
         document.querySelector('.search-btn').addEventListener('click', function() {
           const query = document.querySelector('.search-input').value;
           if (query) {
-            // Implement search logic here
             console.log('Searching for:', query);
           }
         });
@@ -883,3 +858,317 @@ function generateMainPage() {
     </body>
     </html>
   `;
+}
+
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+  
+  // Health check endpoint
+  if (pathname === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      service: 'mountain-lake-insights'
+    }));
+    return;
+  }
+  
+  // Main page
+  if (pathname === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(generateMainPage());
+    return;
+  }
+  
+  // Newsletter signup page
+  if (pathname === '/newsletter') {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Newsletter | Mountain Lake Insights</title>
+        <meta name="description" content="Subscribe to our weekly newsletter for expert insights and professional analysis.">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            color: white;
+          }
+          .newsletter-container {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 50px;
+            border-radius: 16px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+          }
+          .newsletter-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #1f2937;
+          }
+          .newsletter-form {
+            margin-top: 30px;
+          }
+          .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 16px;
+          }
+          .subscribe-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s ease;
+          }
+          .subscribe-btn:hover {
+            background: #1d4ed8;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="newsletter-container">
+          <h1 class="newsletter-title">Stay Informed</h1>
+          <p>Get weekly expert insights delivered to your inbox. Join 50,000+ professionals who trust our analysis.</p>
+          <form class="newsletter-form">
+            <input type="email" placeholder="Enter your email" class="form-input" required>
+            <input type="text" placeholder="Your role/industry (optional)" class="form-input">
+            <button type="submit" class="subscribe-btn">Subscribe to Newsletter</button>
+          </form>
+          <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+            <a href="/" style="color: #2563eb;">← Back to Insights</a>
+          </p>
+        </div>
+      </body>
+      </html>
+    `);
+    return;
+  }
+  
+  // Experts page
+  if (pathname === '/experts') {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Our Experts | Mountain Lake Insights</title>
+        <meta name="description" content="Meet our team of industry experts and thought leaders.">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            margin: 0;
+            padding: 40px 20px;
+            color: #1f2937;
+          }
+          .experts-container {
+            max-width: 1000px;
+            margin: 0 auto;
+          }
+          .experts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+          }
+          .expert-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+          }
+          .expert-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="experts-container">
+          <h1 style="text-align: center; font-size: 2.5rem; margin-bottom: 20px;">Our Expert Team</h1>
+          <p style="text-align: center; color: #6b7280; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+            Our insights are crafted by industry leaders with decades of combined experience across technology, finance, wellness, and professional development.
+          </p>
+          
+          <div class="experts-grid">
+            <div class="expert-card">
+              <div class="expert-avatar">👨‍💼</div>
+              <h3>Dr. Michael Chen</h3>
+              <p style="color: #2563eb; font-weight: 600;">Technology Strategy</p>
+              <p style="color: #6b7280;">Former CTO at Fortune 500 companies. 15+ years in enterprise technology and digital transformation.</p>
+            </div>
+            
+            <div class="expert-card">
+              <div class="expert-avatar">👩‍⚕️</div>
+              <h3>Dr. Sarah Johnson</h3>
+              <p style="color: #059669; font-weight: 600;">Wellness & Health</p>
+              <p style="color: #6b7280;">Certified nutritionist and wellness consultant. Published researcher in preventive medicine.</p>
+            </div>
+            
+            <div class="expert-card">
+              <div class="expert-avatar">👨‍💰</div>
+              <h3>Robert Martinez</h3>
+              <p style="color: #dc2626; font-weight: 600;">Financial Strategy</p>
+              <p style="color: #6b7280;">Former investment banker and financial advisor. Specializes in portfolio management and risk assessment.</p>
+            </div>
+          </div>
+          
+          <p style="text-align: center; margin-top: 40px;">
+            <a href="/" style="color: #2563eb; text-decoration: none;">← Back to Insights</a>
+          </p>
+        </div>
+      </body>
+      </html>
+    `);
+    return;
+  }
+  
+  // Individual insight/article pages
+  if (pathname.startsWith('/insights/')) {
+    const articleSlug = pathname.split('/insights/')[1];
+    const articleContent = generateArticlePage(articleSlug);
+    
+    if (articleContent) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(articleContent);
+      return;
+    }
+  }
+  
+  // Categories API for content management
+  if (pathname === '/categories') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(expertContent, null, 2));
+    return;
+  }
+  
+  // Sitemap for SEO
+  if (pathname === '/sitemap.xml') {
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://mountainlakeinsights.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://mountainlakeinsights.com/experts</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mountainlakeinsights.com/newsletter</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  ${Object.values(expertContent).flatMap(category => 
+    category.articles.map(article => `
+  <url>
+    <loc>https://mountainlakeinsights.com/insights/${article.slug}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>`).join('')
+  )}
+</urlset>`;
+    
+    res.writeHead(200, { 'Content-Type': 'application/xml' });
+    res.end(sitemap);
+    return;
+  }
+  
+  // Robots.txt for SEO
+  if (pathname === '/robots.txt') {
+    const robotsTxt = `User-agent: *
+Allow: /
+Sitemap: https://mountainlakeinsights.com/sitemap.xml
+
+# Block admin areas
+Disallow: /admin/
+Disallow: /private/`;
+    
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end(robotsTxt);
+    return;
+  }
+  
+  // Serve static files from public directory
+  let filePath = path.join(__dirname, 'public', pathname);
+  
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/html' });
+      res.end(`
+        <html>
+          <body style="font-family: Arial; text-align: center; margin-top: 100px;">
+            <h1>404 - Page Not Found</h1>
+            <p>The page you're looking for doesn't exist.</p>
+            <a href="/" style="color: #2563eb; text-decoration: none;">← Back to Home</a>
+          </body>
+        </html>
+      `);
+      return;
+    }
+    
+    const ext = path.extname(filePath);
+    const contentType = {
+      '.html': 'text/html',
+      '.js': 'text/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.ico': 'image/x-icon'
+    }[ext] || 'text/plain';
+    
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(data);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`🏔️ Mountain Lake Insights server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🚀 Main site: http://localhost:${PORT}`);
+  console.log(`📋 Available routes:`);
+  console.log(`   - / (Expert insights and analysis)`);
+  console.log(`   - /insights/[article-slug] (Individual articles)`);
+  console.log(`   - /experts (Meet our expert team)`);
+  console.log(`   - /newsletter (Newsletter signup)`);
+  console.log(`   - /categories (Content API)`);
+  console.log(`   - /sitemap.xml (SEO sitemap)`);
+  console.log(`   - /robots.txt (Search engine directives)`);
+  console.log(`📈 SEO Features: Structured data, meta tags, semantic HTML`);
+  console.log(`🎯 Content Focus: Expert insights, professional analysis`);
+});
