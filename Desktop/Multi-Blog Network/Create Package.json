@@ -1,0 +1,26 @@
+cat > package.json << 'EOF'
+{
+  "name": "blog-network",
+  "version": "1.0.0",
+  "description": "Independent Blog Network with AI Content Generation",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'Building blog network...'",
+    "dev": "echo 'Development mode'",
+    "deploy": "echo 'Deploying to Render...'"
+  },
+  "keywords": [
+    "blog",
+    "affiliate-marketing", 
+    "content-generation",
+    "render-deployment"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
+EOF
