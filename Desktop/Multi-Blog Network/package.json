@@ -1,0 +1,15 @@
+{
+  "name": "blog-network",
+  "version": "1.0.0",
+  "description": "Independent Blog Network with AI Content Generation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'Building blog network...'",
+    "dev": "echo 'Development mode'"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

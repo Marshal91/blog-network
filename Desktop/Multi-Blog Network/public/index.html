@@ -1,10 +1,3 @@
-# Create directories
-mkdir -p public
-mkdir -p src
-mkdir -p deployment
-
-# Create basic HTML file
-cat > public/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,8 +24,21 @@ cat > public/index.html << 'EOF'
         }
         h1 { font-size: 3rem; margin-bottom: 20px; }
         p { font-size: 1.2rem; margin-bottom: 30px; }
-        .sites { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
-        .site { background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; }
+        .sites { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 20px; 
+            margin-top: 30px; 
+        }
+        .site { 
+            background: rgba(255,255,255,0.2); 
+            padding: 20px; 
+            border-radius: 10px; 
+        }
+        @media (max-width: 768px) {
+            .sites { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+        }
     </style>
 </head>
 <body>
@@ -60,9 +66,8 @@ cat > public/index.html << 'EOF'
         </div>
         
         <p style="margin-top: 30px; font-size: 1rem; opacity: 0.8;">
-            Deployment in Progress... Check back soon!
+            ✅ Deployment Successful - Blog Network Online!
         </p>
     </div>
 </body>
 </html>
-EOF

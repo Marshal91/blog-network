@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: blog-network-main
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+
+databases:
+  - name: blog-network-db
+    databaseName: blognetwork

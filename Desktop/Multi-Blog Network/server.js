@@ -1,4 +1,3 @@
-cat > server.js << 'EOF'
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -44,4 +43,3 @@ server.listen(PORT, () => {
   console.log(`🚀 Blog Network server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
 });
-EOF
