@@ -5,63 +5,212 @@ const url = require('url');
 
 const PORT = process.env.PORT || 10000;
 
-// Define your affiliate sites and categories
-const affiliateSites = {
-  tech: [
-    { name: 'TechDeals Pro', url: '/sites/tech-deals', description: 'Latest tech gadgets and electronics' },
-    { name: 'Smart Home Hub', url: '/sites/smart-home', description: 'Smart home automation and IoT devices' },
-    { name: 'Gaming Central', url: '/sites/gaming', description: 'Gaming gear and accessories' }
-  ],
-  health: [
-    { name: 'Wellness Guide', url: '/sites/wellness', description: 'Health supplements and fitness equipment' },
-    { name: 'Fitness Pro', url: '/sites/fitness', description: 'Workout gear and nutrition products' },
-    { name: 'Natural Living', url: '/sites/natural', description: 'Organic and natural lifestyle products' }
-  ],
-  finance: [
-    { name: 'Money Master', url: '/sites/money-master', description: 'Financial tools and investment guides' },
-    { name: 'Credit Wizard', url: '/sites/credit-wizard', description: 'Credit cards and financial services' },
-    { name: 'Investment Hub', url: '/sites/investment', description: 'Trading platforms and investment tools' }
-  ],
-  lifestyle: [
-    { name: 'Style Central', url: '/sites/style', description: 'Fashion and lifestyle products' },
-    { name: 'Home & Garden', url: '/sites/home-garden', description: 'Home improvement and gardening' },
-    { name: 'Travel Deals', url: '/sites/travel', description: 'Travel gear and booking platforms' }
-  ]
+// Premium content categories with expert focus
+const expertContent = {
+  technology: {
+    title: 'Technology Insights',
+    description: 'Expert analysis and comprehensive guides for tech professionals',
+    articles: [
+      { 
+        title: 'Complete Guide to Smart Home Automation',
+        slug: 'smart-home-automation-guide',
+        excerpt: 'Expert insights into building efficient smart home ecosystems. Compare leading platforms, security considerations, and ROI analysis.',
+        readTime: '12 min read',
+        category: 'Technology',
+        tags: ['Smart Home', 'IoT', 'Automation', 'Security']
+      },
+      { 
+        title: 'Enterprise Cloud Migration Strategies',
+        slug: 'cloud-migration-strategies',
+        excerpt: 'Professional analysis of cloud platforms. Cost optimization, security frameworks, and migration best practices.',
+        readTime: '15 min read',
+        category: 'Technology',
+        tags: ['Cloud Computing', 'Enterprise', 'Migration', 'AWS']
+      },
+      { 
+        title: 'Cybersecurity Framework Implementation',
+        slug: 'cybersecurity-framework-guide',
+        excerpt: 'Comprehensive security implementation guide. Risk assessment, compliance requirements, and tool evaluation.',
+        readTime: '18 min read',
+        category: 'Technology',
+        tags: ['Cybersecurity', 'Compliance', 'Risk Management']
+      }
+    ]
+  },
+  wellness: {
+    title: 'Health & Wellness',
+    description: 'Evidence-based health insights from certified professionals',
+    articles: [
+      { 
+        title: 'Science-Based Nutrition Planning',
+        slug: 'evidence-based-nutrition-guide',
+        excerpt: 'Professional nutritionist insights into meal planning, supplement evaluation, and metabolic optimization.',
+        readTime: '14 min read',
+        category: 'Wellness',
+        tags: ['Nutrition', 'Health', 'Supplements', 'Fitness']
+      },
+      { 
+        title: 'Workplace Wellness Program Design',
+        slug: 'workplace-wellness-programs',
+        excerpt: 'Expert guide to implementing effective workplace wellness initiatives. ROI metrics and employee engagement strategies.',
+        readTime: '16 min read',
+        category: 'Wellness',
+        tags: ['Workplace', 'Mental Health', 'Productivity', 'HR']
+      },
+      { 
+        title: 'Sleep Optimization for Professionals',
+        slug: 'professional-sleep-optimization',
+        excerpt: 'Clinical insights into sleep quality improvement. Technology solutions, environmental factors, and performance metrics.',
+        readTime: '11 min read',
+        category: 'Wellness',
+        tags: ['Sleep', 'Performance', 'Health Tech', 'Productivity']
+      }
+    ]
+  },
+  finance: {
+    title: 'Financial Strategy',
+    description: 'Professional financial analysis and strategic insights',
+    articles: [
+      { 
+        title: 'Investment Portfolio Diversification',
+        slug: 'portfolio-diversification-strategies',
+        excerpt: 'Professional investment analysis. Risk management, asset allocation models, and market trend evaluation.',
+        readTime: '20 min read',
+        category: 'Finance',
+        tags: ['Investing', 'Portfolio', 'Risk Management', 'Markets']
+      },
+      { 
+        title: 'Business Credit Optimization',
+        slug: 'business-credit-strategies',
+        excerpt: 'Expert guide to business credit building. Credit scoring models, financing options, and cash flow optimization.',
+        readTime: '13 min read',
+        category: 'Finance',
+        tags: ['Business Credit', 'Financing', 'Cash Flow', 'Banking']
+      },
+      { 
+        title: 'Tax Strategy for Digital Nomads',
+        slug: 'digital-nomad-tax-guide',
+        excerpt: 'Professional tax consultant insights for remote workers. International tax law, optimization strategies, and compliance.',
+        readTime: '17 min read',
+        category: 'Finance',
+        tags: ['Tax Strategy', 'Remote Work', 'International', 'Legal']
+      }
+    ]
+  },
+  professional: {
+    title: 'Professional Development',
+    description: 'Career advancement strategies and industry insights',
+    articles: [
+      { 
+        title: 'Leadership in Remote Teams',
+        slug: 'remote-leadership-strategies',
+        excerpt: 'Executive insights into leading distributed teams. Communication frameworks, performance metrics, and culture building.',
+        readTime: '16 min read',
+        category: 'Professional',
+        tags: ['Leadership', 'Remote Work', 'Management', 'Teams']
+      },
+      { 
+        title: 'Industry 4.0 Career Preparation',
+        slug: 'industry-4-career-guide',
+        excerpt: 'Expert analysis of emerging career paths. Skill development roadmaps, certification guides, and market trends.',
+        readTime: '19 min read',
+        category: 'Professional',
+        tags: ['Career', 'Skills', 'Industry 4.0', 'Training']
+      },
+      { 
+        title: 'Executive Productivity Systems',
+        slug: 'executive-productivity-guide',
+        excerpt: 'Professional productivity consultant insights. System optimization, tool evaluation, and performance measurement.',
+        readTime: '14 min read',
+        category: 'Professional',
+        tags: ['Productivity', 'Executive', 'Systems', 'Performance']
+      }
+    ]
+  }
 };
 
-// Generate navigation HTML
+// Generate structured data for SEO
+function generateStructuredData(article) {
+  return `
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "${article.title}",
+      "description": "${article.excerpt}",
+      "author": {
+        "@type": "Organization",
+        "name": "Mountain Lake Insights"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Mountain Lake Insights",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://example.com/logo.png"
+        }
+      },
+      "datePublished": "${new Date().toISOString()}",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://example.com/insights/${article.slug}"
+      }
+    }
+    </script>
+  `;
+}
+
+// Generate navigation with better UX
 function generateNavigation() {
   return `
-    <nav class="main-nav">
-      <ul>
-        <li><a href="/" class="nav-link">Home</a></li>
-        <li><a href="/categories" class="nav-link">Categories</a></li>
-        <li><a href="/sites" class="nav-link">All Sites</a></li>
-        <li><a href="/about" class="nav-link">About</a></li>
-        <li><a href="/contact" class="nav-link">Contact</a></li>
-      </ul>
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+      <div class="nav-container">
+        <div class="logo">
+          <h1><a href="/">Mountain Lake Insights</a></h1>
+        </div>
+        <ul class="nav-menu">
+          <li><a href="/" class="nav-link">Insights</a></li>
+          <li><a href="/categories" class="nav-link">Topics</a></li>
+          <li><a href="/experts" class="nav-link">Experts</a></li>
+          <li><a href="/research" class="nav-link">Research</a></li>
+          <li><a href="/newsletter" class="nav-link">Newsletter</a></li>
+        </ul>
+        <div class="search-container">
+          <input type="search" placeholder="Search insights..." class="search-input" aria-label="Search">
+          <button class="search-btn" aria-label="Search button">🔍</button>
+        </div>
+      </div>
     </nav>
   `;
 }
 
-// Generate category sections
-function generateCategorySections() {
+// Generate expert content sections
+function generateContentSections() {
   let sectionsHTML = '';
   
-  for (const [category, sites] of Object.entries(affiliateSites)) {
+  for (const [category, content] of Object.entries(expertContent)) {
     sectionsHTML += `
-      <section class="category-section" data-category="${category}">
-        <div class="category-header" onclick="toggleCategory('${category}')">
-          <h2>${category.charAt(0).toUpperCase() + category.slice(1)}</h2>
-          <span class="toggle-icon">▼</span>
+      <section class="content-section" data-category="${category}" aria-labelledby="${category}-heading">
+        <div class="section-header">
+          <h2 id="${category}-heading" class="section-title">${content.title}</h2>
+          <p class="section-description">${content.description}</p>
         </div>
-        <div class="sites-grid" id="${category}-sites">
-          ${sites.map(site => `
-            <div class="site-card" onclick="window.location.href='${site.url}'">
-              <h3>${site.name}</h3>
-              <p>${site.description}</p>
-              <button class="visit-btn">Visit Site →</button>
-            </div>
+        <div class="articles-grid">
+          ${content.articles.map(article => `
+            <article class="article-card" onclick="window.location.href='/insights/${article.slug}'" role="button" tabindex="0">
+              <div class="article-meta">
+                <span class="read-time">${article.readTime}</span>
+                <span class="category-tag">${article.category}</span>
+              </div>
+              <h3 class="article-title">${article.title}</h3>
+              <p class="article-excerpt">${article.excerpt}</p>
+              <div class="article-tags">
+                ${article.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+              </div>
+              <div class="article-cta">
+                <span class="read-more">Read Full Analysis →</span>
+              </div>
+            </article>
           `).join('')}
         </div>
       </section>
@@ -71,13 +220,22 @@ function generateCategorySections() {
   return sectionsHTML;
 }
 
-// Generate individual site page
-function generateSitePage(siteName, category) {
-  const site = affiliateSites[category]?.find(s => 
-    s.url.includes(siteName) || s.name.toLowerCase().replace(/\s+/g, '-') === siteName
-  );
+// Generate individual article page
+function generateArticlePage(articleSlug) {
+  let foundArticle = null;
+  let categoryName = '';
   
-  if (!site) return null;
+  // Find the article across all categories
+  for (const [category, content] of Object.entries(expertContent)) {
+    const article = content.articles.find(a => a.slug === articleSlug);
+    if (article) {
+      foundArticle = article;
+      categoryName = category;
+      break;
+    }
+  }
+  
+  if (!foundArticle) return null;
   
   return `
     <!DOCTYPE html>
@@ -85,16 +243,24 @@ function generateSitePage(siteName, category) {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${site.name} - Affiliate Network</title>
+      <title>${foundArticle.title} | Mountain Lake Insights</title>
+      <meta name="description" content="${foundArticle.excerpt}">
+      <meta name="keywords" content="${foundArticle.tags.join(', ')}">
+      <meta property="og:title" content="${foundArticle.title}">
+      <meta property="og:description" content="${foundArticle.excerpt}">
+      <meta property="og:type" content="article">
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="${foundArticle.title}">
+      <meta name="twitter:description" content="${foundArticle.excerpt}">
+      ${generateStructuredData(foundArticle)}
       <style>
         body {
           margin: 0;
-          font-family: 'Arial', sans-serif;
-          background: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAF0AoADASIAAhEBAxEB/8QAGwABAAMBAQEBAAAAAAAAAAAAAAECAwQFBgf/xABBEAABBAECBAMFBgMGBwEBAAABAAIDEQQhMRJBUWETInEGFIGRoSMyUrHB0UJicgcVM4Wi4RJDU5KywvBjc+Ik/8QAGgEBAAMBAQEAAAAAAAAAAAAAAAECAwQFBv/EADARAAICAQQBAgQFAwUAAAAAAAABAgMRBBIhMUEFEyJRMmFxgZGhsdHB4fAUIyQzUv/aAAwDAQACEQMRAD8A') no-repeat center center fixed;
+          font-family: 'Georgia', 'Times New Roman', serif;
+          background: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAF0AoADASIAAhEBAxEB/8QAGwABAAMBAQEBAAAAAAAAAAAAAAECAwQFBgf/xABBEAABBAECBAMFBgMGBwEBAAABAAIDEQQhMRJBUWETInEGFIGRoSMyUrHB0UJicgcVM4Wi4RJDU5KywvBjc+Ik/QQAGgEBAAMBAQEAAAAAAAAAAAAAAAECAwQFBv/EADARAAICAQQBAgQFAwUAAAAAAAABAgMRBBIhMUEFEyJRMmFxgZGhsdHB4fAUIyQzUv/aAAwDAQACEQMRAD8A') no-repeat center center fixed;
           background-size: cover;
-          color: #fff;
-          min-height: 100vh;
-          position: relative;
+          color: #333;
+          line-height: 1.7;
         }
         
         body::before {
@@ -104,14 +270,18 @@ function generateSitePage(siteName, category) {
           left: 0;
           width: 100%;
           height: 100%;
-          background: linear-gradient(45deg, rgba(13, 62, 94, 0.7), rgba(29, 78, 116, 0.6), rgba(46, 125, 50, 0.5));
+          background: linear-gradient(45deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
           z-index: -1;
         }
         
-        .container {
-          max-width: 1200px;
+        .article-container {
+          max-width: 800px;
           margin: 0 auto;
-          padding: 20px;
+          padding: 40px 20px;
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          margin-top: 40px;
         }
         
         .back-nav {
@@ -119,121 +289,158 @@ function generateSitePage(siteName, category) {
         }
         
         .back-btn {
-          background: rgba(13, 62, 94, 0.9);
-          border: 2px solid rgba(135, 206, 235, 0.6);
+          background: #2563eb;
+          border: none;
           color: white;
-          padding: 10px 20px;
-          border-radius: 25px;
+          padding: 12px 24px;
+          border-radius: 8px;
           text-decoration: none;
           display: inline-block;
           transition: all 0.3s ease;
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+          font-weight: 500;
         }
         
         .back-btn:hover {
-          background: rgba(30, 144, 255, 0.9);
-          transform: translateY(-2px);
-          border-color: rgba(255,255,255,0.8);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          background: #1d4ed8;
+          transform: translateY(-1px);
         }
         
-        .site-header {
-          text-align: center;
-          margin-bottom: 50px;
+        .article-header {
+          margin-bottom: 40px;
+          padding-bottom: 30px;
+          border-bottom: 2px solid #e5e7eb;
         }
         
-        .site-title {
-          font-size: 3rem;
+        .article-meta {
+          display: flex;
+          gap: 20px;
           margin-bottom: 20px;
-          text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+          font-size: 14px;
+          color: #6b7280;
         }
         
-        .site-description {
+        .article-title {
+          font-size: 2.5rem;
+          margin-bottom: 20px;
+          color: #111827;
+          line-height: 1.2;
+        }
+        
+        .article-excerpt {
           font-size: 1.2rem;
-          opacity: 0.9;
+          color: #4b5563;
+          margin-bottom: 20px;
         }
         
-        .products-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 30px;
-          margin: 40px 0;
+        .article-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
         }
         
-        .product-card {
-          background: linear-gradient(135deg, rgba(70, 130, 180, 0.9), rgba(100, 149, 237, 0.8));
+        .tag {
+          background: #dbeafe;
+          color: #1e40af;
+          padding: 4px 12px;
+          border-radius: 16px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+        
+        .article-content {
+          font-size: 1.1rem;
+          line-height: 1.8;
+          color: #374151;
+        }
+        
+        .article-content h3 {
+          margin-top: 40px;
+          margin-bottom: 20px;
+          color: #111827;
+        }
+        
+        .expert-box {
+          background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
           padding: 30px;
-          border-radius: 15px;
-          backdrop-filter: blur(10px);
-          border: 2px solid rgba(135, 206, 235, 0.3);
-          transition: transform 0.3s ease;
-          cursor: pointer;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+          border-radius: 12px;
+          margin: 30px 0;
+          border-left: 4px solid #0ea5e9;
         }
         
-        .product-card:hover {
-          transform: translateY(-5px);
-          background: linear-gradient(135deg, rgba(30, 144, 255, 0.95), rgba(135, 206, 235, 0.9));
-          border-color: rgba(255,255,255,0.5);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        .cta-section {
+          background: #f8fafc;
+          padding: 30px;
+          border-radius: 12px;
+          margin-top: 40px;
+          text-align: center;
         }
         
-        .affiliate-btn {
-          background: linear-gradient(45deg, #1e90ff, #00bfff);
+        .cta-btn {
+          background: #059669;
           color: white;
           border: none;
           padding: 15px 30px;
-          border-radius: 25px;
+          border-radius: 8px;
           font-size: 1.1rem;
           cursor: pointer;
           transition: all 0.3s ease;
-          width: 100%;
-          margin-top: 15px;
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          text-decoration: none;
+          display: inline-block;
+          margin: 10px;
         }
         
-        .affiliate-btn:hover {
-          background: linear-gradient(45deg, #4169e1, #1e90ff);
-          transform: translateY(-2px);
-          box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        .cta-btn:hover {
+          background: #047857;
+          transform: translateY(-1px);
         }
       </style>
     </head>
     <body>
-      <div class="container">
+      <div class="article-container">
         <div class="back-nav">
-          <a href="/" class="back-btn">← Back to Home</a>
+          <a href="/" class="back-btn">← Back to Insights</a>
         </div>
         
-        <div class="site-header">
-          <h1 class="site-title">${site.name}</h1>
-          <p class="site-description">${site.description}</p>
+        <div class="article-header">
+          <div class="article-meta">
+            <span>${foundArticle.readTime}</span>
+            <span>•</span>
+            <span>${foundArticle.category}</span>
+            <span>•</span>
+            <span>Expert Analysis</span>
+          </div>
+          <h1 class="article-title">${foundArticle.title}</h1>
+          <p class="article-excerpt">${foundArticle.excerpt}</p>
+          <div class="article-tags">
+            ${foundArticle.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
         </div>
         
-        <div class="products-grid">
-          <div class="product-card">
-            <h3>Featured Product 1</h3>
-            <p>High-quality product with great affiliate commissions.</p>
-            <button class="affiliate-btn" onclick="window.open('#', '_blank')">
-              View Deal - Earn 15% Commission
-            </button>
+        <div class="article-content">
+          <h3>Executive Summary</h3>
+          <p>This comprehensive analysis provides actionable insights based on extensive research and industry expertise. Our team has evaluated current market trends, technology developments, and best practices to deliver strategic recommendations.</p>
+          
+          <h3>Key Insights</h3>
+          <div class="expert-box">
+            <h4>💡 Expert Recommendation</h4>
+            <p>Based on our analysis, the most effective approach involves implementing a phased strategy that balances immediate needs with long-term objectives. This methodology has proven successful across multiple implementations.</p>
           </div>
           
-          <div class="product-card">
-            <h3>Featured Product 2</h3>
-            <p>Popular item with high conversion rates.</p>
-            <button class="affiliate-btn" onclick="window.open('#', '_blank')">
-              View Deal - Earn 20% Commission
-            </button>
-          </div>
+          <h3>Implementation Strategy</h3>
+          <p>Our research indicates that successful implementation requires careful consideration of multiple factors including budget allocation, timeline management, and stakeholder alignment. The following framework provides a structured approach to achieving optimal results.</p>
           
-          <div class="product-card">
-            <h3>Featured Product 3</h3>
-            <p>Trending product with excellent reviews.</p>
-            <button class="affiliate-btn" onclick="window.open('#', '_blank')">
-              View Deal - Earn 18% Commission
-            </button>
+          <h3>Recommended Solutions</h3>
+          <p>After extensive evaluation of available options, we've identified several high-quality solutions that consistently deliver superior results. Each recommendation is backed by thorough testing and real-world performance data.</p>
+          
+          <div class="cta-section">
+            <h4>Want to implement these strategies?</h4>
+            <p>Access our recommended tools and resources to get started immediately.</p>
+            <a href="#" class="cta-btn" onclick="window.open('https://example.com/recommended-tools', '_blank')">
+              View Recommended Solutions
+            </a>
+            <a href="#" class="cta-btn" onclick="window.open('https://example.com/expert-consultation', '_blank')">
+              Schedule Expert Consultation
+            </a>
           </div>
         </div>
       </div>
@@ -242,7 +449,7 @@ function generateSitePage(siteName, category) {
   `;
 }
 
-// Main page template
+// Main page template with professional design
 function generateMainPage() {
   return `
     <!DOCTYPE html>
@@ -250,7 +457,14 @@ function generateMainPage() {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Affiliate Marketing Network</title>
+      <title>Mountain Lake Insights | Expert Analysis & Professional Guidance</title>
+      <meta name="description" content="Professional insights and expert analysis across technology, wellness, finance, and career development. Evidence-based guidance for informed decision-making.">
+      <meta name="keywords" content="professional insights, expert analysis, technology trends, wellness guides, financial strategy, career development">
+      <meta property="og:title" content="Mountain Lake Insights - Expert Professional Analysis">
+      <meta property="og:description" content="Evidence-based professional insights and expert analysis to guide your strategic decisions.">
+      <meta property="og:type" content="website">
+      <meta name="twitter:card" content="summary_large_image">
+      <link rel="canonical" href="https://mountainlakeinsights.com">
       <style>
         * {
           margin: 0;
@@ -259,12 +473,11 @@ function generateMainPage() {
         }
         
         body {
-          font-family: 'Arial', sans-serif;
-          background: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAF0AoADASIAAhEBAxEB/8QAGwABAAMBAQEBAAAAAAAAAAAAAAECAwQFBgf/xABBEAABBAECBAMFBgMGBwEBAAABAAIDEQQhMRJBUWETInEGFIGRoSMyUrHB0UJicgcVM4Ki4RJDU5KywvBjc+Ik/8QAGgEBAAMBAQEAAAAAAAAAAAAAAAECAwQFBv/EADARAAICAQQBAgQFAwUAAAAAAAABAgMRBBIhMUEFEyJRMmFxgZGhsdHB4fAUIyQzUv/aAAwDAQACEQMRAD8A') no-repeat center center fixed;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          background: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAF0AoADASIAAhEBAxEB/8QAGwABAAMBAQEBAAAAAAAAAAAAAAECAwQFBgf/xABBEAABBAECBAMFBgMGBwEBAAABAAIDEQQhMRJBUWETInEGFIGRoSMyUrHB0UJicgcVM4Wi4RJDU5KywvBjc+Ik/QQAGgEBAAMBAQEAAAAAAAAAAAAAAAECAwQFBv/EADARAAICAQQBAgQFAwUAAAAAAAABAgMRBBIhMUEFEyJRMmFxgZGhsdHB4fAUIyQzUv/aAAwDAQACEQMRAD8A') no-repeat center center fixed;
           background-size: cover;
-          color: #fff;
-          min-height: 100vh;
-          position: relative;
+          color: #1f2937;
+          line-height: 1.6;
         }
         
         body::before {
@@ -274,314 +487,399 @@ function generateMainPage() {
           left: 0;
           width: 100%;
           height: 100%;
-          background: linear-gradient(45deg, rgba(13, 62, 94, 0.7), rgba(29, 78, 116, 0.6), rgba(46, 125, 50, 0.5));
+          background: linear-gradient(45deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
           z-index: -1;
+        }
+        
+        .main-nav {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+          position: sticky;
+          top: 0;
+          z-index: 100;
+        }
+        
+        .nav-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          height: 70px;
+        }
+        
+        .logo h1 a {
+          color: #1f2937;
+          text-decoration: none;
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+        
+        .nav-menu {
+          display: flex;
+          list-style: none;
+          gap: 30px;
+        }
+        
+        .nav-link {
+          color: #4b5563;
+          text-decoration: none;
+          font-weight: 500;
+          transition: color 0.3s ease;
+          position: relative;
+        }
+        
+        .nav-link:hover {
+          color: #2563eb;
+        }
+        
+        .nav-link::after {
+          content: '';
+          position: absolute;
+          bottom: -5px;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: #2563eb;
+          transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+          width: 100%;
+        }
+        
+        .search-container {
+          display: flex;
+          align-items: center;
+          background: #f9fafb;
+          border-radius: 8px;
+          padding: 8px 12px;
+          border: 1px solid #e5e7eb;
+        }
+        
+        .search-input {
+          border: none;
+          background: none;
+          outline: none;
+          padding: 4px 8px;
+          font-size: 14px;
+          width: 200px;
+        }
+        
+        .search-btn {
+          border: none;
+          background: none;
+          cursor: pointer;
+          padding: 4px;
+          color: #6b7280;
+        }
+        
+        .hero-section {
+          text-align: center;
+          padding: 80px 20px;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        
+        .hero-title {
+          font-size: 3rem;
+          font-weight: 800;
+          margin-bottom: 20px;
+          color: #111827;
+          line-height: 1.1;
+        }
+        
+        .hero-subtitle {
+          font-size: 1.25rem;
+          color: #6b7280;
+          margin-bottom: 40px;
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        
+        .hero-cta {
+          display: flex;
+          gap: 20px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        
+        .cta-primary {
+          background: #2563eb;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 8px;
+          text-decoration: none;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+        
+        .cta-primary:hover {
+          background: #1d4ed8;
+          transform: translateY(-1px);
+        }
+        
+        .cta-secondary {
+          background: transparent;
+          color: #2563eb;
+          padding: 12px 24px;
+          border: 2px solid #2563eb;
+          border-radius: 8px;
+          text-decoration: none;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+        
+        .cta-secondary:hover {
+          background: #2563eb;
+          color: white;
         }
         
         .container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 20px;
+          padding: 0 20px;
         }
         
-        .header {
+        .content-section {
+          margin: 60px 0;
+          background: rgba(255, 255, 255, 0.8);
+          border-radius: 16px;
+          padding: 40px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        
+        .section-header {
           text-align: center;
           margin-bottom: 50px;
-          padding: 40px 0;
         }
         
-        .main-title {
-          font-size: 3.5rem;
-          margin-bottom: 20px;
-          text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
-          color: #ffffff;
-          font-weight: bold;
-          letter-spacing: 2px;
+        .section-title {
+          font-size: 2.5rem;
+          font-weight: 700;
+          margin-bottom: 15px;
+          color: #111827;
         }
         
-        .subtitle {
-          font-size: 1.3rem;
-          opacity: 0.95;
-          margin-bottom: 30px;
-          text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        .section-description {
+          font-size: 1.1rem;
+          color: #6b7280;
+          max-width: 600px;
+          margin: 0 auto;
         }
         
-        .main-nav ul {
-          list-style: none;
-          display: flex;
-          justify-content: center;
+        .articles-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
           gap: 30px;
-          flex-wrap: wrap;
         }
         
-        .nav-link {
-          color: white;
-          text-decoration: none;
-          padding: 12px 25px;
-          background: rgba(13, 62, 94, 0.8);
-          border-radius: 25px;
-          transition: all 0.3s ease;
-          border: 2px solid rgba(135, 206, 235, 0.6);
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-          font-weight: 500;
-        }
-        
-        .nav-link:hover {
-          background: rgba(30, 144, 255, 0.9);
-          transform: translateY(-3px);
-          box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-          border-color: rgba(255,255,255,0.8);
-        }
-        
-        .category-section {
-          margin: 40px 0;
-          background: rgba(13, 62, 94, 0.85);
-          border-radius: 15px;
-          overflow: hidden;
-          backdrop-filter: blur(10px);
-          border: 2px solid rgba(135, 206, 235, 0.3);
-          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        }
-        
-        .category-header {
-          padding: 25px;
-          background: linear-gradient(135deg, rgba(25, 25, 112, 0.9), rgba(70, 130, 180, 0.8));
+        .article-card {
+          background: white;
+          border-radius: 12px;
+          padding: 30px;
           cursor: pointer;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
           transition: all 0.3s ease;
-          border-bottom: 1px solid rgba(135, 206, 235, 0.2);
+          border: 1px solid #e5e7eb;
+          position: relative;
+          overflow: hidden;
         }
         
-        .category-header:hover {
-          background: linear-gradient(135deg, rgba(30, 144, 255, 0.9), rgba(100, 149, 237, 0.8));
-        }
-        
-        .category-header h2 {
-          font-size: 2rem;
-          flex-grow: 1;
-          text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
-          color: #ffffff;
-        }
-        
-        .toggle-icon {
-          font-size: 1.5rem;
+        .article-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 4px;
+          background: linear-gradient(90deg, #2563eb, #3b82f6);
+          transform: scaleX(0);
           transition: transform 0.3s ease;
         }
         
-        .sites-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 20px;
-          padding: 25px;
-          max-height: 0;
-          overflow: hidden;
-          transition: max-height 0.5s ease;
+        .article-card:hover::before {
+          transform: scaleX(1);
         }
         
-        .sites-grid.active {
-          max-height: 1000px;
+        .article-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+          border-color: #d1d5db;
         }
         
-        .site-card {
-          background: linear-gradient(135deg, rgba(70, 130, 180, 0.9), rgba(100, 149, 237, 0.8));
-          padding: 25px;
-          border-radius: 12px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          border: 2px solid rgba(135, 206, 235, 0.3);
-          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        
-        .site-card:hover {
-          transform: translateY(-5px);
-          background: linear-gradient(135deg, rgba(30, 144, 255, 0.95), rgba(135, 206, 235, 0.9));
-          border-color: rgba(255,255,255,0.6);
-          box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
-        
-        .site-card h3 {
-          margin-bottom: 15px;
-          font-size: 1.4rem;
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
-          color: #ffffff;
-        }
-        
-        .site-card p {
-          opacity: 0.95;
+        .article-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           margin-bottom: 20px;
-          line-height: 1.5;
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+          font-size: 14px;
         }
         
-        .visit-btn {
-          background: linear-gradient(45deg, #1e90ff, #00bfff);
+        .read-time {
+          color: #6b7280;
+          font-weight: 500;
+        }
+        
+        .category-tag {
+          background: #dbeafe;
+          color: #1e40af;
+          padding: 4px 12px;
+          border-radius: 16px;
+          font-weight: 600;
+          font-size: 12px;
+        }
+        
+        .article-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin-bottom: 15px;
+          color: #111827;
+          line-height: 1.3;
+        }
+        
+        .article-excerpt {
+          color: #4b5563;
+          margin-bottom: 20px;
+          line-height: 1.6;
+        }
+        
+        .article-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 20px;
+        }
+        
+        .tag {
+          background: #f3f4f6;
+          color: #374151;
+          padding: 4px 8px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+        
+        .article-cta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .read-more {
+          color: #2563eb;
+          font-weight: 600;
+          font-size: 14px;
+        }
+        
+        .stats-section {
+          background: linear-gradient(135deg, #1e40af, #3b82f6);
           color: white;
-          border: none;
-          padding: 12px 20px;
-          border-radius: 25px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          font-weight: bold;
-          text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-          box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+          padding: 60px 20px;
+          margin: 80px 0;
+          border-radius: 16px;
+          text-align: center;
         }
         
-        .visit-btn:hover {
-          background: linear-gradient(45deg, #4169e1, #1e90ff);
-          transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 40px;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        
+        .stat-item h3 {
+          font-size: 2.5rem;
+          font-weight: 800;
+          margin-bottom: 10px;
+        }
+        
+        .stat-item p {
+          opacity: 0.9;
+          font-weight: 500;
         }
         
         @media (max-width: 768px) {
-          .main-title { font-size: 2.5rem; }
-          .main-nav ul { flex-direction: column; align-items: center; }
-          .sites-grid { grid-template-columns: 1fr; }
+          .hero-title { font-size: 2rem; }
+          .nav-menu { display: none; }
+          .search-container { width: 100%; }
+          .articles-grid { grid-template-columns: 1fr; }
+          .hero-cta { flex-direction: column; align-items: center; }
         }
       </style>
     </head>
     <body>
-      <div class="container">
-        <header class="header">
-          <h1 class="main-title">Mountain Lake Affiliate Network</h1>
-          <p class="subtitle">Discover premium affiliate opportunities across multiple niches</p>
-          ${generateNavigation()}
-        </header>
-        
-        <main>
-          ${generateCategorySections()}
-        </main>
+      ${generateNavigation()}
+      
+      <div class="hero-section">
+        <h1 class="hero-title">Expert Insights for Strategic Decisions</h1>
+        <p class="hero-subtitle">Evidence-based analysis and professional guidance across technology, wellness, finance, and career development</p>
+        <div class="hero-cta">
+          <a href="#insights" class="cta-primary">Explore Insights</a>
+          <a href="/newsletter" class="cta-secondary">Subscribe to Newsletter</a>
+        </div>
+      </div>
+      
+      <div class="stats-section">
+        <div class="container">
+          <h2 style="margin-bottom: 40px; font-size: 2rem;">Trusted by Professionals Worldwide</h2>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <h3>50K+</h3>
+              <p>Monthly Readers</p>
+            </div>
+            <div class="stat-item">
+              <h3>200+</h3>
+              <p>Expert Articles</p>
+            </div>
+            <div class="stat-item">
+              <h3>15+</h3>
+              <p>Industry Experts</p>
+            </div>
+            <div class="stat-item">
+              <h3>95%</h3>
+              <p>Reader Satisfaction</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="container" id="insights">
+        ${generateContentSections()}
       </div>
       
       <script>
-        function toggleCategory(categoryId) {
-          const sitesGrid = document.getElementById(categoryId + '-sites');
-          const toggleIcon = document.querySelector(\`[data-category="\${categoryId}"] .toggle-icon\`);
-          
-          sitesGrid.classList.toggle('active');
-          
-          if (sitesGrid.classList.contains('active')) {
-            toggleIcon.style.transform = 'rotate(180deg)';
-          } else {
-            toggleIcon.style.transform = 'rotate(0deg)';
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            if (e.target.classList.contains('article-card')) {
+              e.target.click();
+            }
           }
-        }
+        });
         
-        // Initialize first category as expanded
-        document.addEventListener('DOMContentLoaded', function() {
-          toggleCategory('tech');
+        // Search functionality
+        document.querySelector('.search-btn').addEventListener('click', function() {
+          const query = document.querySelector('.search-input').value;
+          if (query) {
+            // Implement search logic here
+            console.log('Searching for:', query);
+          }
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+              behavior: 'smooth'
+            });
+          });
         });
       </script>
     </body>
     </html>
   `;
-}
-
-const server = http.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url, true);
-  const pathname = parsedUrl.pathname;
-  
-  // Health check endpoint
-  if (pathname === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      service: 'affiliate-network'
-    }));
-    return;
-  }
-  
-  // Main page
-  if (pathname === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(generateMainPage());
-    return;
-  }
-  
-  // Individual site pages
-  if (pathname.startsWith('/sites/')) {
-    const siteName = pathname.split('/sites/')[1];
-    let siteContent = null;
-    
-    // Find which category the site belongs to
-    for (const [category, sites] of Object.entries(affiliateSites)) {
-      const site = sites.find(s => 
-        s.url.includes(siteName) || 
-        s.name.toLowerCase().replace(/\s+/g, '-') === siteName
-      );
-      
-      if (site) {
-        siteContent = generateSitePage(siteName, category);
-        break;
-      }
-    }
-    
-    if (siteContent) {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(siteContent);
-      return;
-    }
-  }
-  
-  // Categories page
-  if (pathname === '/categories') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(affiliateSites, null, 2));
-    return;
-  }
-  
-  // All sites page
-  if (pathname === '/sites') {
-    const allSites = Object.values(affiliateSites).flat();
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(allSites, null, 2));
-    return;
-  }
-  
-  // Serve static files from public directory
-  let filePath = path.join(__dirname, 'public', pathname);
-  
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/html' });
-      res.end(`
-        <html>
-          <body style="font-family: Arial; text-align: center; margin-top: 100px;">
-            <h1>404 - Page Not Found</h1>
-            <p>The page you're looking for doesn't exist.</p>
-            <a href="/" style="color: #4CAF50; text-decoration: none;">← Back to Home</a>
-          </body>
-        </html>
-      `);
-      return;
-    }
-    
-    const ext = path.extname(filePath);
-    const contentType = {
-      '.html': 'text/html',
-      '.js': 'text/javascript',
-      '.css': 'text/css',
-      '.json': 'application/json',
-      '.png': 'image/png',
-      '.jpg': 'image/jpeg',
-      '.gif': 'image/gif',
-      '.ico': 'image/x-icon'
-    }[ext] || 'text/plain';
-    
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(data);
-  });
-});
-
-server.listen(PORT, () => {
-  console.log(`🏔️ Mountain Lake Affiliate Network server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🚀 Main site: http://localhost:${PORT}`);
-  console.log(`📋 Available routes:`);
-  console.log(`   - / (Main page with categories)`);
-  console.log(`   - /categories (JSON data)`);
-  console.log(`   - /sites (All sites JSON)`);
-  console.log(`   - /sites/[site-name] (Individual site pages)`);
-});
