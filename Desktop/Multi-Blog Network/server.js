@@ -1,10 +1,170 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 10000;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'your-openai-api-key-here';
 
-// Premium content categories with expert focus
+// Content generation prompts for each category
+const contentPrompts = {
+  technology: {
+    systemPrompt: "You are a technology expert and professional blogger. Write comprehensive, actionable content about technology trends, tools, and strategies for professionals.",
+    topics: [
+      "Cloud Computing Best Practices",
+      "Cybersecurity Implementation Guide", 
+      "AI Tools for Business Productivity",
+      "DevOps Automation Strategies",
+      "Data Analytics Platforms Comparison",
+      "Remote Work Technology Solutions",
+      "Enterprise Software Integration",
+      "Digital Transformation Roadmap",
+      "Blockchain Implementation for Business",
+      "IoT Security Best Practices"
+    ]
+  },
+  wellness: {
+    systemPrompt: "You are a certified wellness consultant and health professional. Write evidence-based content about health, nutrition, mental wellness, and workplace wellbeing.",
+    topics: [
+      "Workplace Mental Health Strategies",
+      "Nutrition for Busy Professionals",
+      "Exercise Routines for Desk Workers",
+      "Stress Management Techniques",
+      "Sleep Optimization for Productivity",
+      "Mindfulness in Professional Settings",
+      "Ergonomic Workplace Setup Guide",
+      "Work-Life Balance Framework",
+      "Corporate Wellness Program Design",
+      "Burnout Prevention Strategies"
+    ]
+  },
+  finance: {
+    systemPrompt: "You are a financial advisor and investment professional. Write professional content about financial planning, investment strategies, and business finance for professionals.",
+    topics: [
+      "Investment Portfolio Diversification",
+      "Retirement Planning for High Earners",
+      "Tax Optimization Strategies",
+      "Business Cash Flow Management",
+      "Real Estate Investment Analysis",
+      "Emergency Fund Planning Guide",
+      "Cryptocurrency Investment Framework",
+      "Financial Risk Assessment Methods",
+      "Estate Planning Essentials",
+      "Small Business Financial Management"
+    ]
+  },
+  professional: {
+    systemPrompt: "You are a career development consultant and leadership coach. Write actionable content about professional growth, leadership skills, and career advancement strategies.",
+    topics: [
+      "Leadership Development Framework",
+      "Remote Team Management Best Practices",
+      "Professional Networking Strategies",
+      "Career Transition Planning Guide",
+      "Executive Skills Development",
+      "Performance Management Systems",
+      "Industry Trend Analysis Methods",
+      "Executive Communication Techniques",
+      "Team Building Strategies",
+      "Personal Branding for Professionals"
+    ]
+  }
+};
+
+// Function to generate content using OpenAI
+async function generateArticleContent(category, topic) {
+  if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your-openai-api-key-here') {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  const prompt = contentPrompts[category];
+  
+  const requestData = JSON.stringify({
+    model: "gpt-4",
+    messages: [
+      {
+        role: "system",
+        content: prompt.systemPrompt
+      },
+      {
+        role: "user",
+        content: `Write a comprehensive, professional blog article about "${topic}". Include:
+        1. An engaging introduction that hooks the reader
+        2. 4-5 main sections with actionable insights and practical advice
+        3. Specific recommendations, tools, and best practices
+        4. Real-world examples and case studies where relevant
+        5. A strong conclusion with key takeaways
+        6. Make it approximately 1200-1500 words
+        7. Use a professional, authoritative tone
+        8. Include affiliate-friendly product recommendations where appropriate
+        
+        Format the response as JSON with these fields:
+        - title: A compelling, SEO-friendly article title
+        - excerpt: A 2-sentence engaging summary
+        - content: The full article content in clean HTML format with proper headings and paragraphs
+        - tags: Array of 5-6 relevant SEO tags
+        - readTime: Estimated read time (e.g., "12 min read")
+        - metaDescription: SEO meta description under 160 characters`
+      }
+    ],
+    temperature: 0.7,
+    max_tokens: 4000
+  });
+
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.openai.com',
+      port: 443,
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Length': Buffer.byteLength(requestData)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const response = JSON.parse(data);
+          if (response.error) {
+            reject(new Error(`OpenAI API Error: ${response.error.message}`));
+            return;
+          }
+          if (response.choices && response.choices[0]) {
+            const content = JSON.parse(response.choices[0].message.content);
+            resolve(content);
+          } else {
+            reject(new Error('Invalid OpenAI response format'));
+          }
+        } catch (error) {
+          reject(new Error(`Failed to parse OpenAI response: ${error.message}`));
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      reject(new Error(`Request failed: ${error.message}`));
+    });
+    
+    req.write(requestData);
+    req.end();
+  });
+}
+
+// In-memory content storage (in production, use a database)
+let generatedArticles = new Map();
+
+// Function to create slug from title
+function createSlug(title) {
+  return title.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+// Enhanced content structure with both static and dynamic content
 const expertContent = {
   technology: {
     title: 'Technology Insights',
@@ -16,7 +176,8 @@ const expertContent = {
         excerpt: 'Expert insights into building efficient smart home ecosystems. Compare leading platforms, security considerations, and ROI analysis.',
         readTime: '12 min read',
         category: 'Technology',
-        tags: ['Smart Home', 'IoT', 'Automation', 'Security']
+        tags: ['Smart Home', 'IoT', 'Automation', 'Security'],
+        isGenerated: false
       },
       { 
         title: 'Enterprise Cloud Migration Strategies',
@@ -24,15 +185,8 @@ const expertContent = {
         excerpt: 'Professional analysis of cloud platforms. Cost optimization, security frameworks, and migration best practices.',
         readTime: '15 min read',
         category: 'Technology',
-        tags: ['Cloud Computing', 'Enterprise', 'Migration', 'AWS']
-      },
-      { 
-        title: 'Cybersecurity Framework Implementation',
-        slug: 'cybersecurity-framework-guide',
-        excerpt: 'Comprehensive security implementation guide. Risk assessment, compliance requirements, and tool evaluation.',
-        readTime: '18 min read',
-        category: 'Technology',
-        tags: ['Cybersecurity', 'Compliance', 'Risk Management']
+        tags: ['Cloud Computing', 'Enterprise', 'Migration', 'AWS'],
+        isGenerated: false
       }
     ]
   },
@@ -46,23 +200,8 @@ const expertContent = {
         excerpt: 'Professional nutritionist insights into meal planning, supplement evaluation, and metabolic optimization.',
         readTime: '14 min read',
         category: 'Wellness',
-        tags: ['Nutrition', 'Health', 'Supplements', 'Fitness']
-      },
-      { 
-        title: 'Workplace Wellness Program Design',
-        slug: 'workplace-wellness-programs',
-        excerpt: 'Expert guide to implementing effective workplace wellness initiatives. ROI metrics and employee engagement strategies.',
-        readTime: '16 min read',
-        category: 'Wellness',
-        tags: ['Workplace', 'Mental Health', 'Productivity', 'HR']
-      },
-      { 
-        title: 'Sleep Optimization for Professionals',
-        slug: 'professional-sleep-optimization',
-        excerpt: 'Clinical insights into sleep quality improvement. Technology solutions, environmental factors, and performance metrics.',
-        readTime: '11 min read',
-        category: 'Wellness',
-        tags: ['Sleep', 'Performance', 'Health Tech', 'Productivity']
+        tags: ['Nutrition', 'Health', 'Supplements', 'Fitness'],
+        isGenerated: false
       }
     ]
   },
@@ -76,23 +215,8 @@ const expertContent = {
         excerpt: 'Professional investment analysis. Risk management, asset allocation models, and market trend evaluation.',
         readTime: '20 min read',
         category: 'Finance',
-        tags: ['Investing', 'Portfolio', 'Risk Management', 'Markets']
-      },
-      { 
-        title: 'Business Credit Optimization',
-        slug: 'business-credit-strategies',
-        excerpt: 'Expert guide to business credit building. Credit scoring models, financing options, and cash flow optimization.',
-        readTime: '13 min read',
-        category: 'Finance',
-        tags: ['Business Credit', 'Financing', 'Cash Flow', 'Banking']
-      },
-      { 
-        title: 'Tax Strategy for Digital Nomads',
-        slug: 'digital-nomad-tax-guide',
-        excerpt: 'Professional tax consultant insights for remote workers. International tax law, optimization strategies, and compliance.',
-        readTime: '17 min read',
-        category: 'Finance',
-        tags: ['Tax Strategy', 'Remote Work', 'International', 'Legal']
+        tags: ['Investing', 'Portfolio', 'Risk Management', 'Markets'],
+        isGenerated: false
       }
     ]
   },
@@ -106,27 +230,47 @@ const expertContent = {
         excerpt: 'Executive insights into leading distributed teams. Communication frameworks, performance metrics, and culture building.',
         readTime: '16 min read',
         category: 'Professional',
-        tags: ['Leadership', 'Remote Work', 'Management', 'Teams']
-      },
-      { 
-        title: 'Industry 4.0 Career Preparation',
-        slug: 'industry-4-career-guide',
-        excerpt: 'Expert analysis of emerging career paths. Skill development roadmaps, certification guides, and market trends.',
-        readTime: '19 min read',
-        category: 'Professional',
-        tags: ['Career', 'Skills', 'Industry 4.0', 'Training']
-      },
-      { 
-        title: 'Executive Productivity Systems',
-        slug: 'executive-productivity-guide',
-        excerpt: 'Professional productivity consultant insights. System optimization, tool evaluation, and performance measurement.',
-        readTime: '14 min read',
-        category: 'Professional',
-        tags: ['Productivity', 'Executive', 'Systems', 'Performance']
+        tags: ['Leadership', 'Remote Work', 'Management', 'Teams'],
+        isGenerated: false
       }
     ]
   }
 };
+
+// Get all articles including generated ones
+function getAllArticles(category = null) {
+  const allContent = { ...expertContent };
+  
+  // Add generated articles to each category
+  for (const [cat, content] of Object.entries(allContent)) {
+    if (category && cat !== category) continue;
+    
+    const generatedForCategory = Array.from(generatedArticles.values())
+      .filter(article => article.category.toLowerCase() === cat);
+    
+    allContent[cat].articles = [...content.articles, ...generatedForCategory];
+  }
+  
+  return category ? allContent[category] : allContent;
+}
+
+// Find article by slug (static or generated)
+function findArticleBySlug(slug) {
+  // Check generated articles first
+  if (generatedArticles.has(slug)) {
+    return generatedArticles.get(slug);
+  }
+  
+  // Check static articles
+  for (const [category, content] of Object.entries(expertContent)) {
+    const article = content.articles.find(a => a.slug === slug);
+    if (article) {
+      return article;
+    }
+  }
+  
+  return null;
+}
 
 // Generate structured data for SEO
 function generateStructuredData(article) {
@@ -149,7 +293,7 @@ function generateStructuredData(article) {
           "url": "https://example.com/logo.png"
         }
       },
-      "datePublished": "${new Date().toISOString()}",
+      "datePublished": "${article.datePublished || new Date().toISOString()}",
       "mainEntityOfPage": {
         "@type": "WebPage",
         "@id": "https://example.com/insights/${article.slug}"
@@ -159,7 +303,7 @@ function generateStructuredData(article) {
   `;
 }
 
-// Generate navigation with better UX
+// Generate navigation
 function generateNavigation() {
   return `
     <nav class="main-nav" role="navigation" aria-label="Main navigation">
@@ -171,7 +315,7 @@ function generateNavigation() {
           <li><a href="/" class="nav-link">Insights</a></li>
           <li><a href="/categories" class="nav-link">Topics</a></li>
           <li><a href="/experts" class="nav-link">Experts</a></li>
-          <li><a href="/research" class="nav-link">Research</a></li>
+          <li><a href="/generate" class="nav-link">Generate Content</a></li>
           <li><a href="/newsletter" class="nav-link">Newsletter</a></li>
         </ul>
         <div class="search-container">
@@ -183,11 +327,12 @@ function generateNavigation() {
   `;
 }
 
-// Generate expert content sections
+// Generate content sections with all articles
 function generateContentSections() {
   let sectionsHTML = '';
+  const allContent = getAllArticles();
   
-  for (const [category, content] of Object.entries(expertContent)) {
+  for (const [category, content] of Object.entries(allContent)) {
     sectionsHTML += `
       <section class="content-section" data-category="${category}" aria-labelledby="${category}-heading">
         <div class="section-header">
@@ -196,10 +341,11 @@ function generateContentSections() {
         </div>
         <div class="articles-grid">
           ${content.articles.map(article => `
-            <article class="article-card" onclick="window.location.href='/insights/${article.slug}'" role="button" tabindex="0">
+            <article class="article-card ${article.isGenerated ? 'generated' : ''}" onclick="window.location.href='/insights/${article.slug}'" role="button" tabindex="0">
               <div class="article-meta">
                 <span class="read-time">${article.readTime}</span>
                 <span class="category-tag">${article.category}</span>
+                ${article.isGenerated ? '<span class="ai-badge">🤖 AI Generated</span>' : ''}
               </div>
               <h3 class="article-title">${article.title}</h3>
               <p class="article-excerpt">${article.excerpt}</p>
@@ -221,20 +367,27 @@ function generateContentSections() {
 
 // Generate individual article page
 function generateArticlePage(articleSlug) {
-  let foundArticle = null;
-  let categoryName = '';
-  
-  // Find the article across all categories
-  for (const [category, content] of Object.entries(expertContent)) {
-    const article = content.articles.find(a => a.slug === articleSlug);
-    if (article) {
-      foundArticle = article;
-      categoryName = category;
-      break;
-    }
-  }
+  const foundArticle = findArticleBySlug(articleSlug);
   
   if (!foundArticle) return null;
+  
+  // Use generated content if available, otherwise use template content
+  const articleContent = foundArticle.content || `
+    <h3>Executive Summary</h3>
+    <p>This comprehensive analysis provides actionable insights based on extensive research and industry expertise. Our team has evaluated current market trends, technology developments, and best practices to deliver strategic recommendations.</p>
+    
+    <h3>Key Insights</h3>
+    <div class="expert-box">
+      <h4>💡 Expert Recommendation</h4>
+      <p>Based on our analysis, the most effective approach involves implementing a phased strategy that balances immediate needs with long-term objectives. This methodology has proven successful across multiple implementations.</p>
+    </div>
+    
+    <h3>Implementation Strategy</h3>
+    <p>Our research indicates that successful implementation requires careful consideration of multiple factors including budget allocation, timeline management, and stakeholder alignment. The following framework provides a structured approach to achieving optimal results.</p>
+    
+    <h3>Recommended Solutions</h3>
+    <p>After extensive evaluation of available options, we've identified several high-quality solutions that consistently deliver superior results. Each recommendation is backed by thorough testing and real-world performance data.</p>
+  `;
   
   return `
     <!DOCTYPE html>
@@ -243,213 +396,11 @@ function generateArticlePage(articleSlug) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${foundArticle.title} | Mountain Lake Insights</title>
-      <meta name="description" content="${foundArticle.excerpt}">
+      <meta name="description" content="${foundArticle.metaDescription || foundArticle.excerpt}">
       <meta name="keywords" content="${foundArticle.tags.join(', ')}">
       <meta property="og:title" content="${foundArticle.title}">
       <meta property="og:description" content="${foundArticle.excerpt}">
       <meta property="og:type" content="article">
-      <meta name="twitter:card" content="summary_large_image">
-      <meta name="twitter:title" content="${foundArticle.title}">
-      <meta name="twitter:description" content="${foundArticle.excerpt}">
-      ${generateStructuredData(foundArticle)}
-      <style>
-        body {
-          margin: 0;
-          font-family: 'Georgia', 'Times New Roman', serif;
-          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-          color: #333;
-          line-height: 1.7;
-        }
-        
-        .article-container {
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 40px 20px;
-          background: rgba(255, 255, 255, 0.95);
-          border-radius: 12px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-          margin-top: 40px;
-        }
-        
-        .back-nav {
-          margin-bottom: 30px;
-        }
-        
-        .back-btn {
-          background: #2563eb;
-          border: none;
-          color: white;
-          padding: 12px 24px;
-          border-radius: 8px;
-          text-decoration: none;
-          display: inline-block;
-          transition: all 0.3s ease;
-          font-weight: 500;
-        }
-        
-        .back-btn:hover {
-          background: #1d4ed8;
-          transform: translateY(-1px);
-        }
-        
-        .article-header {
-          margin-bottom: 40px;
-          padding-bottom: 30px;
-          border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .article-meta {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 20px;
-          font-size: 14px;
-          color: #6b7280;
-        }
-        
-        .article-title {
-          font-size: 2.5rem;
-          margin-bottom: 20px;
-          color: #111827;
-          line-height: 1.2;
-        }
-        
-        .article-excerpt {
-          font-size: 1.2rem;
-          color: #4b5563;
-          margin-bottom: 20px;
-        }
-        
-        .article-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        
-        .tag {
-          background: #dbeafe;
-          color: #1e40af;
-          padding: 4px 12px;
-          border-radius: 16px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-        
-        .article-content {
-          font-size: 1.1rem;
-          line-height: 1.8;
-          color: #374151;
-        }
-        
-        .article-content h3 {
-          margin-top: 40px;
-          margin-bottom: 20px;
-          color: #111827;
-        }
-        
-        .expert-box {
-          background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-          padding: 30px;
-          border-radius: 12px;
-          margin: 30px 0;
-          border-left: 4px solid #0ea5e9;
-        }
-        
-        .cta-section {
-          background: #f8fafc;
-          padding: 30px;
-          border-radius: 12px;
-          margin-top: 40px;
-          text-align: center;
-        }
-        
-        .cta-btn {
-          background: #059669;
-          color: white;
-          border: none;
-          padding: 15px 30px;
-          border-radius: 8px;
-          font-size: 1.1rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          text-decoration: none;
-          display: inline-block;
-          margin: 10px;
-        }
-        
-        .cta-btn:hover {
-          background: #047857;
-          transform: translateY(-1px);
-        }
-      </style>
-    </head>
-    <body>
-      <div class="article-container">
-        <div class="back-nav">
-          <a href="/" class="back-btn">← Back to Insights</a>
-        </div>
-        
-        <div class="article-header">
-          <div class="article-meta">
-            <span>${foundArticle.readTime}</span>
-            <span>•</span>
-            <span>${foundArticle.category}</span>
-            <span>•</span>
-            <span>Expert Analysis</span>
-          </div>
-          <h1 class="article-title">${foundArticle.title}</h1>
-          <p class="article-excerpt">${foundArticle.excerpt}</p>
-          <div class="article-tags">
-            ${foundArticle.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-          </div>
-        </div>
-        
-        <div class="article-content">
-          <h3>Executive Summary</h3>
-          <p>This comprehensive analysis provides actionable insights based on extensive research and industry expertise. Our team has evaluated current market trends, technology developments, and best practices to deliver strategic recommendations.</p>
-          
-          <h3>Key Insights</h3>
-          <div class="expert-box">
-            <h4>💡 Expert Recommendation</h4>
-            <p>Based on our analysis, the most effective approach involves implementing a phased strategy that balances immediate needs with long-term objectives. This methodology has proven successful across multiple implementations.</p>
-          </div>
-          
-          <h3>Implementation Strategy</h3>
-          <p>Our research indicates that successful implementation requires careful consideration of multiple factors including budget allocation, timeline management, and stakeholder alignment. The following framework provides a structured approach to achieving optimal results.</p>
-          
-          <h3>Recommended Solutions</h3>
-          <p>After extensive evaluation of available options, we've identified several high-quality solutions that consistently deliver superior results. Each recommendation is backed by thorough testing and real-world performance data.</p>
-          
-          <div class="cta-section">
-            <h4>Want to implement these strategies?</h4>
-            <p>Access our recommended tools and resources to get started immediately.</p>
-            <a href="#" class="cta-btn" onclick="window.open('https://example.com/recommended-tools', '_blank')">
-              View Recommended Solutions
-            </a>
-            <a href="#" class="cta-btn" onclick="window.open('https://example.com/expert-consultation', '_blank')">
-              Schedule Expert Consultation
-            </a>
-          </div>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-}
-
-// Main page template with professional design
-function generateMainPage() {
-  return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Mountain Lake Insights | Expert Analysis & Professional Guidance</title>
-      <meta name="description" content="Professional insights and expert analysis across technology, wellness, finance, and career development. Evidence-based guidance for informed decision-making.">
-      <meta name="keywords" content="professional insights, expert analysis, technology trends, wellness guides, financial strategy, career development">
-      <meta property="og:title" content="Mountain Lake Insights - Expert Professional Analysis">
-      <meta property="og:description" content="Evidence-based professional insights and expert analysis to guide your strategic decisions.">
-      <meta property="og:type" content="website">
       <meta name="twitter:card" content="summary_large_image">
       <link rel="canonical" href="https://mountainlakeinsights.com">
       <style>
@@ -613,6 +564,21 @@ function generateMainPage() {
           color: white;
         }
         
+        .cta-ai {
+          background: #10b981;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 8px;
+          text-decoration: none;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+        
+        .cta-ai:hover {
+          background: #059669;
+          transform: translateY(-1px);
+        }
+        
         .container {
           max-width: 1200px;
           margin: 0 auto;
@@ -663,6 +629,10 @@ function generateMainPage() {
           overflow: hidden;
         }
         
+        .article-card.generated {
+          border-left: 4px solid #10b981;
+        }
+        
         .article-card::before {
           content: '';
           position: absolute;
@@ -673,6 +643,10 @@ function generateMainPage() {
           background: linear-gradient(90deg, #2563eb, #3b82f6);
           transform: scaleX(0);
           transition: transform 0.3s ease;
+        }
+        
+        .article-card.generated::before {
+          background: linear-gradient(90deg, #10b981, #059669);
         }
         
         .article-card:hover::before {
@@ -691,6 +665,8 @@ function generateMainPage() {
           align-items: center;
           margin-bottom: 20px;
           font-size: 14px;
+          flex-wrap: wrap;
+          gap: 10px;
         }
         
         .read-time {
@@ -705,6 +681,15 @@ function generateMainPage() {
           border-radius: 16px;
           font-weight: 600;
           font-size: 12px;
+        }
+        
+        .ai-badge {
+          background: #10b981;
+          color: white;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 600;
         }
         
         .article-title {
@@ -749,6 +734,10 @@ function generateMainPage() {
           font-size: 14px;
         }
         
+        .generated .read-more {
+          color: #10b981;
+        }
+        
         .stats-section {
           background: linear-gradient(135deg, #1e40af, #3b82f6);
           color: white;
@@ -790,17 +779,18 @@ function generateMainPage() {
       ${generateNavigation()}
       
       <div class="hero-section">
-        <h1 class="hero-title">Expert Insights for Strategic Decisions</h1>
-        <p class="hero-subtitle">Evidence-based analysis and professional guidance across technology, wellness, finance, and career development</p>
+        <h1 class="hero-title">Expert Insights Enhanced by AI</h1>
+        <p class="hero-subtitle">Professional analysis and AI-generated content across technology, wellness, finance, and career development</p>
         <div class="hero-cta">
           <a href="#insights" class="cta-primary">Explore Insights</a>
-          <a href="/newsletter" class="cta-secondary">Subscribe to Newsletter</a>
+          <a href="/generate" class="cta-ai">Generate Content</a>
+          <a href="/newsletter" class="cta-secondary">Subscribe</a>
         </div>
       </div>
       
       <div class="stats-section">
         <div class="container">
-          <h2 style="margin-bottom: 40px; font-size: 2rem;">Trusted by Professionals Worldwide</h2>
+          <h2 style="margin-bottom: 40px; font-size: 2rem;">Powered by AI, Trusted by Professionals</h2>
           <div class="stats-grid">
             <div class="stat-item">
               <h3>50K+</h3>
@@ -811,8 +801,8 @@ function generateMainPage() {
               <p>Expert Articles</p>
             </div>
             <div class="stat-item">
-              <h3>15+</h3>
-              <p>Industry Experts</p>
+              <h3>AI</h3>
+              <p>Content Generation</p>
             </div>
             <div class="stat-item">
               <h3>95%</h3>
@@ -859,10 +849,10 @@ function generateMainPage() {
   `;
 }
 
-const server = http.createServer((req, res) => {
-  // Use the modern URL constructor instead of url.parse()
+const server = http.createServer(async (req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = requestUrl.pathname;
+  const method = req.method;
   
   // Health check endpoint
   if (pathname === '/health') {
@@ -870,15 +860,108 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      service: 'mountain-lake-insights'
+      service: 'mountain-lake-insights',
+      aiEnabled: !!OPENAI_API_KEY && OPENAI_API_KEY !== 'your-openai-api-key-here'
     }));
     return;
   }
   
   // Main page
-  if (pathname === '/') {
+  if (pathname === '/' && method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(generateMainPage());
+    return;
+  }
+  
+  // Content generator page
+  if (pathname === '/generate' && method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(generateContentGeneratorPage());
+    return;
+  }
+  
+  // API endpoint for content generation
+  if (pathname === '/api/generate' && method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { category, topic } = JSON.parse(body);
+        
+        if (!category || !topic) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Category and topic are required' }));
+          return;
+        }
+        
+        if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your-openai-api-key-here') {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            success: false, 
+            error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.' 
+          }));
+          return;
+        }
+        
+        const generatedContent = await generateArticleContent(category, topic);
+        const slug = createSlug(generatedContent.title);
+        
+        // Create article object with generated content
+        const article = {
+          title: generatedContent.title,
+          slug: slug,
+          excerpt: generatedContent.excerpt,
+          content: generatedContent.content,
+          readTime: generatedContent.readTime,
+          category: category.charAt(0).toUpperCase() + category.slice(1),
+          tags: generatedContent.tags,
+          metaDescription: generatedContent.metaDescription,
+          isGenerated: true,
+          datePublished: new Date().toISOString()
+        };
+        
+        // Store in memory
+        generatedArticles.set(slug, article);
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: true, 
+          article: { 
+            title: article.title, 
+            slug: article.slug,
+            readTime: article.readTime
+          } 
+        }));
+        
+      } catch (error) {
+        console.error('Content generation error:', error);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: error.message || 'Content generation failed' 
+        }));
+      }
+    });
+    return;
+  }
+  
+  // Individual insight/article pages
+  if (pathname.startsWith('/insights/')) {
+    const articleSlug = pathname.split('/insights/')[1];
+    const articleContent = generateArticlePage(articleSlug);
+    
+    if (articleContent) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(articleContent);
+      return;
+    }
+  }
+  
+  // Categories API (enhanced with generated content)
+  if (pathname === '/categories') {
+    const allContent = getAllArticles();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(allContent, null, 2));
     return;
   }
   
@@ -948,7 +1031,7 @@ const server = http.createServer((req, res) => {
       <body>
         <div class="newsletter-container">
           <h1 class="newsletter-title">Stay Informed</h1>
-          <p>Get weekly expert insights delivered to your inbox. Join 50,000+ professionals who trust our analysis.</p>
+          <p>Get weekly expert insights and AI-generated content delivered to your inbox. Join 50,000+ professionals who trust our analysis.</p>
           <form class="newsletter-form">
             <input type="email" placeholder="Enter your email" class="form-input" required>
             <input type="text" placeholder="Your role/industry (optional)" class="form-input">
@@ -974,7 +1057,7 @@ const server = http.createServer((req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Our Experts | Mountain Lake Insights</title>
-        <meta name="description" content="Meet our team of industry experts and thought leaders.">
+        <meta name="description" content="Meet our team of industry experts and AI-powered content generation.">
         <style>
           body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -1012,13 +1095,19 @@ const server = http.createServer((req, res) => {
             font-size: 3rem;
             color: white;
           }
+          .ai-card {
+            border: 2px solid #10b981;
+          }
+          .ai-card .expert-avatar {
+            background: linear-gradient(135deg, #10b981, #059669);
+          }
         </style>
       </head>
       <body>
         <div class="experts-container">
           <h1 style="text-align: center; font-size: 2.5rem; margin-bottom: 20px;">Our Expert Team</h1>
           <p style="text-align: center; color: #6b7280; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
-            Our insights are crafted by industry leaders with decades of combined experience across technology, finance, wellness, and professional development.
+            Our insights combine human expertise with AI-powered content generation for comprehensive, up-to-date analysis.
           </p>
           
           <div class="experts-grid">
@@ -1042,6 +1131,13 @@ const server = http.createServer((req, res) => {
               <p style="color: #dc2626; font-weight: 600;">Financial Strategy</p>
               <p style="color: #6b7280;">Former investment banker and financial advisor. Specializes in portfolio management and risk assessment.</p>
             </div>
+            
+            <div class="expert-card ai-card">
+              <div class="expert-avatar">🤖</div>
+              <h3>AI Content Generator</h3>
+              <p style="color: #10b981; font-weight: 600;">Powered by GPT-4</p>
+              <p style="color: #6b7280;">Advanced AI system that generates professional, actionable content across all our expertise areas on demand.</p>
+            </div>
           </div>
           
           <p style="text-align: center; margin-top: 40px;">
@@ -1054,27 +1150,25 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // Individual insight/article pages
-  if (pathname.startsWith('/insights/')) {
-    const articleSlug = pathname.split('/insights/')[1];
-    const articleContent = generateArticlePage(articleSlug);
-    
-    if (articleContent) {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(articleContent);
-      return;
-    }
-  }
-  
-  // Categories API for content management
-  if (pathname === '/categories') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(expertContent, null, 2));
-    return;
-  }
-  
-  // Sitemap for SEO
+  // Enhanced sitemap with generated content
   if (pathname === '/sitemap.xml') {
+    const staticUrls = Object.values(expertContent).flatMap(category => 
+      category.articles.map(article => `
+  <url>
+    <loc>https://mountainlakeinsights.com/insights/${article.slug}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>`).join('')
+    );
+    
+    const generatedUrls = Array.from(generatedArticles.values()).map(article => `
+  <url>
+    <loc>https://mountainlakeinsights.com/insights/${article.slug}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>${article.datePublished}</lastmod>
+  </url>`).join('');
+    
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -1088,18 +1182,17 @@ const server = http.createServer((req, res) => {
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://mountainlakeinsights.com/generate</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mountainlakeinsights.com/newsletter</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  ${Object.values(expertContent).flatMap(category => 
-    category.articles.map(article => `
-  <url>
-    <loc>https://mountainlakeinsights.com/insights/${article.slug}</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>`).join('')
-  )}
+  ${staticUrls}
+  ${generatedUrls}
 </urlset>`;
     
     res.writeHead(200, { 'Content-Type': 'application/xml' });
@@ -1107,11 +1200,15 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // Robots.txt for SEO
+  // Robots.txt
   if (pathname === '/robots.txt') {
     const robotsTxt = `User-agent: *
 Allow: /
 Sitemap: https://mountainlakeinsights.com/sitemap.xml
+
+# Allow AI content generation
+Allow: /generate
+Allow: /api/generate
 
 # Block admin areas
 Disallow: /admin/
@@ -1122,53 +1219,469 @@ Disallow: /private/`;
     return;
   }
   
-  // Serve static files from public directory
-  let filePath = path.join(__dirname, 'public', pathname);
-  
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/html' });
-      res.end(`
-        <html>
-          <body style="font-family: Arial; text-align: center; margin-top: 100px;">
-            <h1>404 - Page Not Found</h1>
-            <p>The page you're looking for doesn't exist.</p>
-            <a href="/" style="color: #2563eb; text-decoration: none;">← Back to Home</a>
-          </body>
-        </html>
-      `);
-      return;
-    }
-    
-    const ext = path.extname(filePath);
-    const contentType = {
-      '.html': 'text/html',
-      '.js': 'text/javascript',
-      '.css': 'text/css',
-      '.json': 'application/json',
-      '.png': 'image/png',
-      '.jpg': 'image/jpeg',
-      '.gif': 'image/gif',
-      '.ico': 'image/x-icon'
-    }[ext] || 'text/plain';
-    
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(data);
-  });
+  // 404 handler
+  res.writeHead(404, { 'Content-Type': 'text/html' });
+  res.end(`
+    <html>
+      <body style="font-family: Arial; text-align: center; margin-top: 100px;">
+        <h1>404 - Page Not Found</h1>
+        <p>The page you're looking for doesn't exist.</p>
+        <a href="/" style="color: #2563eb; text-decoration: none;">← Back to Home</a>
+      </body>
+    </html>
+  `);
 });
 
 server.listen(PORT, () => {
   console.log(`🏔️ Mountain Lake Insights server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🚀 Main site: http://localhost:${PORT}`);
+  console.log(`🤖 AI Content Generator: http://localhost:${PORT}/generate`);
   console.log(`📋 Available routes:`);
-  console.log(`   - / (Expert insights and analysis)`);
+  console.log(`   - / (Expert insights and AI-generated content)`);
   console.log(`   - /insights/[article-slug] (Individual articles)`);
-  console.log(`   - /experts (Meet our expert team)`);
+  console.log(`   - /experts (Meet our expert team + AI)`);
+  console.log(`   - /generate (AI content generation interface)`);
+  console.log(`   - /api/generate (POST - Generate content API)`);
   console.log(`   - /newsletter (Newsletter signup)`);
-  console.log(`   - /categories (Content API)`);
-  console.log(`   - /sitemap.xml (SEO sitemap)`);
+  console.log(`   - /categories (Content API with generated articles)`);
+  console.log(`   - /sitemap.xml (Enhanced SEO sitemap)`);
   console.log(`   - /robots.txt (Search engine directives)`);
-  console.log(`📈 SEO Features: Structured data, meta tags, semantic HTML`);
-  console.log(`🎯 Content Focus: Expert insights, professional analysis`);
-});
+  console.log(`📈 Features: SEO optimization, structured data, AI content generation`);
+  console.log(`🤖 OpenAI Integration: ${OPENAI_API_KEY && OPENAI_API_KEY !== 'your-openai-api-key-here' ? 'ENABLED' : 'DISABLED - Set OPENAI_API_KEY'}`);
+  console.log(`🎯 Content Focus: Expert insights enhanced with AI`);
+});summary_large_image">
+      <meta name="twitter:title" content="${foundArticle.title}">
+      <meta name="twitter:description" content="${foundArticle.excerpt}">
+      ${generateStructuredData(foundArticle)}
+      <style>
+        body {
+          margin: 0;
+          font-family: 'Georgia', 'Times New Roman', serif;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+          color: #333;
+          line-height: 1.7;
+        }
+        
+        .article-container {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 40px 20px;
+          background: rgba(255, 255, 255, 0.95);
+          border-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          margin-top: 40px;
+        }
+        
+        .back-nav {
+          margin-bottom: 30px;
+        }
+        
+        .back-btn {
+          background: #2563eb;
+          border: none;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 8px;
+          text-decoration: none;
+          display: inline-block;
+          transition: all 0.3s ease;
+          font-weight: 500;
+        }
+        
+        .back-btn:hover {
+          background: #1d4ed8;
+          transform: translateY(-1px);
+        }
+        
+        .article-header {
+          margin-bottom: 40px;
+          padding-bottom: 30px;
+          border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .article-meta {
+          display: flex;
+          gap: 20px;
+          margin-bottom: 20px;
+          font-size: 14px;
+          color: #6b7280;
+          flex-wrap: wrap;
+        }
+        
+        .ai-badge {
+          background: #10b981;
+          color: white;
+          padding: 2px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 600;
+        }
+        
+        .article-title {
+          font-size: 2.5rem;
+          margin-bottom: 20px;
+          color: #111827;
+          line-height: 1.2;
+        }
+        
+        .article-excerpt {
+          font-size: 1.2rem;
+          color: #4b5563;
+          margin-bottom: 20px;
+        }
+        
+        .article-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        
+        .tag {
+          background: #dbeafe;
+          color: #1e40af;
+          padding: 4px 12px;
+          border-radius: 16px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+        
+        .article-content {
+          font-size: 1.1rem;
+          line-height: 1.8;
+          color: #374151;
+        }
+        
+        .article-content h3 {
+          margin-top: 40px;
+          margin-bottom: 20px;
+          color: #111827;
+        }
+        
+        .expert-box {
+          background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+          padding: 30px;
+          border-radius: 12px;
+          margin: 30px 0;
+          border-left: 4px solid #0ea5e9;
+        }
+        
+        .cta-section {
+          background: #f8fafc;
+          padding: 30px;
+          border-radius: 12px;
+          margin-top: 40px;
+          text-align: center;
+        }
+        
+        .cta-btn {
+          background: #059669;
+          color: white;
+          border: none;
+          padding: 15px 30px;
+          border-radius: 8px;
+          font-size: 1.1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          display: inline-block;
+          margin: 10px;
+        }
+        
+        .cta-btn:hover {
+          background: #047857;
+          transform: translateY(-1px);
+        }
+      </style>
+    </head>
+    <body>
+      <div class="article-container">
+        <div class="back-nav">
+          <a href="/" class="back-btn">← Back to Insights</a>
+        </div>
+        
+        <div class="article-header">
+          <div class="article-meta">
+            <span>${foundArticle.readTime}</span>
+            <span>•</span>
+            <span>${foundArticle.category}</span>
+            <span>•</span>
+            <span>Expert Analysis</span>
+            ${foundArticle.isGenerated ? '<span class="ai-badge">🤖 AI Generated</span>' : ''}
+          </div>
+          <h1 class="article-title">${foundArticle.title}</h1>
+          <p class="article-excerpt">${foundArticle.excerpt}</p>
+          <div class="article-tags">
+            ${foundArticle.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+        </div>
+        
+        <div class="article-content">
+          ${articleContent}
+          
+          <div class="cta-section">
+            <h4>Want to implement these strategies?</h4>
+            <p>Access our recommended tools and resources to get started immediately.</p>
+            <a href="#" class="cta-btn" onclick="window.open('https://example.com/recommended-tools', '_blank')">
+              View Recommended Solutions
+            </a>
+            <a href="#" class="cta-btn" onclick="window.open('https://example.com/expert-consultation', '_blank')">
+              Schedule Expert Consultation
+            </a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Generate content generation page
+function generateContentGeneratorPage() {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>AI Content Generator | Mountain Lake Insights</title>
+      <meta name="description" content="Generate high-quality, professional content using AI for your blog network.">
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+          margin: 0;
+          padding: 40px 20px;
+          color: #1f2937;
+        }
+        .generator-container {
+          max-width: 800px;
+          margin: 0 auto;
+          background: white;
+          padding: 40px;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .form-group {
+          margin-bottom: 25px;
+        }
+        label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 600;
+          color: #374151;
+        }
+        select, input[type="text"] {
+          width: 100%;
+          padding: 12px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 16px;
+          transition: border-color 0.3s ease;
+        }
+        select:focus, input[type="text"]:focus {
+          outline: none;
+          border-color: #2563eb;
+        }
+        .generate-btn {
+          background: #2563eb;
+          color: white;
+          border: none;
+          padding: 15px 30px;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          width: 100%;
+          transition: all 0.3s ease;
+        }
+        .generate-btn:hover {
+          background: #1d4ed8;
+          transform: translateY(-1px);
+        }
+        .generate-btn:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
+          transform: none;
+        }
+        .loading {
+          text-align: center;
+          margin: 20px 0;
+          color: #6b7280;
+        }
+        .success {
+          background: #10b981;
+          color: white;
+          padding: 15px;
+          border-radius: 8px;
+          margin-top: 20px;
+        }
+        .error {
+          background: #ef4444;
+          color: white;
+          padding: 15px;
+          border-radius: 8px;
+          margin-top: 20px;
+        }
+        .topic-suggestions {
+          background: #f9fafb;
+          padding: 15px;
+          border-radius: 8px;
+          margin-top: 10px;
+        }
+        .topic-suggestion {
+          display: inline-block;
+          background: #e5e7eb;
+          padding: 6px 12px;
+          margin: 4px;
+          border-radius: 16px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.2s ease;
+        }
+        .topic-suggestion:hover {
+          background: #d1d5db;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="generator-container">
+        <h1 style="text-align: center; margin-bottom: 30px;">AI Content Generator</h1>
+        <p style="text-align: center; color: #6b7280; margin-bottom: 40px;">
+          Generate high-quality, professional content for your blog network using AI
+        </p>
+        
+        <form id="contentForm">
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+              <option value="">Select a category</option>
+              <option value="technology">Technology</option>
+              <option value="wellness">Wellness</option>
+              <option value="finance">Finance</option>
+              <option value="professional">Professional Development</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="topic">Topic or Custom Topic</label>
+            <input type="text" id="topic" name="topic" placeholder="Enter a custom topic or select from suggestions below" required>
+            <div id="topicSuggestions" class="topic-suggestions" style="display: none;"></div>
+          </div>
+          
+          <button type="submit" class="generate-btn" id="generateBtn">
+            Generate Article
+          </button>
+          
+          <div id="loading" class="loading" style="display: none;">
+            Generating content... This may take 30-60 seconds.
+          </div>
+          
+          <div id="result"></div>
+        </form>
+        
+        <p style="text-align: center; margin-top: 40px;">
+          <a href="/" style="color: #2563eb; text-decoration: none;">← Back to Home</a>
+        </p>
+      </div>
+      
+      <script>
+        const categorySelect = document.getElementById('category');
+        const topicInput = document.getElementById('topic');
+        const topicSuggestions = document.getElementById('topicSuggestions');
+        const form = document.getElementById('contentForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        
+        const suggestions = {
+          technology: ${JSON.stringify(contentPrompts.technology.topics)},
+          wellness: ${JSON.stringify(contentPrompts.wellness.topics)},
+          finance: ${JSON.stringify(contentPrompts.finance.topics)},
+          professional: ${JSON.stringify(contentPrompts.professional.topics)}
+        };
+        
+        categorySelect.addEventListener('change', function() {
+          const category = this.value;
+          if (category && suggestions[category]) {
+            topicSuggestions.innerHTML = suggestions[category]
+              .map(topic => \`<span class="topic-suggestion" onclick="selectTopic('\${topic}')">\${topic}</span>\`)
+              .join('');
+            topicSuggestions.style.display = 'block';
+          } else {
+            topicSuggestions.style.display = 'none';
+          }
+        });
+        
+        function selectTopic(topic) {
+          topicInput.value = topic;
+        }
+        
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(form);
+          const category = formData.get('category');
+          const topic = formData.get('topic');
+          
+          generateBtn.disabled = true;
+          loading.style.display = 'block';
+          result.innerHTML = '';
+          
+          try {
+            const response = await fetch('/api/generate', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ category, topic })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              result.innerHTML = \`
+                <div class="success">
+                  <h3>Content Generated Successfully!</h3>
+                  <p><strong>Title:</strong> \${data.article.title}</p>
+                  <p><strong>Slug:</strong> \${data.article.slug}</p>
+                  <p><strong>Read Time:</strong> \${data.article.readTime}</p>
+                  <p><a href="/insights/\${data.article.slug}" target="_blank" style="color: white; text-decoration: underline;">View Article →</a></p>
+                </div>
+              \`;
+            } else {
+              throw new Error(data.error || 'Generation failed');
+            }
+          } catch (error) {
+            result.innerHTML = \`
+              <div class="error">
+                <h3>Generation Failed</h3>
+                <p>\${error.message}</p>
+              </div>
+            \`;
+          } finally {
+            generateBtn.disabled = false;
+            loading.style.display = 'none';
+          }
+        });
+      </script>
+    </body>
+    </html>
+  `;
+}
+
+// Main page with enhanced styling for generated content
+function generateMainPage() {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Mountain Lake Insights | Expert Analysis & AI-Generated Content</title>
+      <meta name="description" content="Professional insights and expert analysis across technology, wellness, finance, and career development. Enhanced with AI-generated content.">
+      <meta name="keywords" content="professional insights, expert analysis, AI content, technology trends, wellness guides, financial strategy, career development">
+      <meta property="og:title" content="Mountain Lake Insights - Expert Professional Analysis">
+      <meta property="og:description" content="Evidence-based professional insights and expert analysis to guide your strategic decisions.">
+      <meta property="og:type" content="website">
+      <meta name="twitter:card" content="
