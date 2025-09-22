@@ -334,7 +334,7 @@ function generateContentSections() {
               <div class="article-meta">
                 <span class="read-time">${article.readTime}</span>
                 <span class="category-tag">${article.category}</span>
-                ${article.isGenerated ? '<span class="ai-badge">🤖 AI Generated</span>' : ''}
+
               </div>
               <h3 class="article-title">${article.title}</h3>
               <p class="article-excerpt">${article.excerpt}</p>
@@ -415,7 +415,7 @@ function generateArticlePage(articleSlug) {
             <span>${foundArticle.category}</span>
             <span>•</span>
             <span>Expert Analysis</span>
-            ${foundArticle.isGenerated ? '<span class="ai-badge">🤖 AI Generated</span>' : ''}
+            ${foundArticle.isGenerated ? '' : ''}
           </div>
           <h1 class="article-title">${foundArticle.title}</h1>
           <p class="article-excerpt">${foundArticle.excerpt}</p>
@@ -612,7 +612,7 @@ function generateMainPage() {
         .section-description { font-size: 1.1rem; color: #6b7280; max-width: 600px; margin: 0 auto; }
         .articles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
         .article-card { background: white; border-radius: 12px; padding: 30px; cursor: pointer; transition: all 0.3s ease; border: 1px solid #e5e7eb; }
-        .article-card.generated { border-left: 4px solid #10b981; }
+        .article-card.generated { border-left: 4px solid #2563eb; }
         .article-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
         .article-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 14px; flex-wrap: wrap; gap: 10px; }
         .read-time { color: #6b7280; font-weight: 500; }
@@ -624,7 +624,6 @@ function generateMainPage() {
         .tag { background: #f3f4f6; color: #374151; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 500; }
         .article-cta { display: flex; justify-content: space-between; align-items: center; }
         .read-more { color: #2563eb; font-weight: 600; font-size: 14px; }
-        .generated .read-more { color: #10b981; }
         .stats-section { background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; padding: 60px 20px; margin: 80px 0; border-radius: 16px; text-align: center; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; max-width: 800px; margin: 0 auto; }
         .stat-item h3 { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; }
