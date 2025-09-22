@@ -18,9 +18,7 @@ const contentPrompts = {
       "Data Analytics Platforms Comparison",
       "Remote Work Technology Solutions",
       "Enterprise Software Integration",
-      "Digital Transformation Roadmap",
-      "Blockchain Implementation for Business",
-      "IoT Security Best Practices"
+      "Digital Transformation Roadmap"
     ]
   },
   wellness: {
@@ -33,9 +31,7 @@ const contentPrompts = {
       "Sleep Optimization for Productivity",
       "Mindfulness in Professional Settings",
       "Ergonomic Workplace Setup Guide",
-      "Work-Life Balance Framework",
-      "Corporate Wellness Program Design",
-      "Burnout Prevention Strategies"
+      "Work-Life Balance Framework"
     ]
   },
   finance: {
@@ -48,9 +44,7 @@ const contentPrompts = {
       "Real Estate Investment Analysis",
       "Emergency Fund Planning Guide",
       "Cryptocurrency Investment Framework",
-      "Financial Risk Assessment Methods",
-      "Estate Planning Essentials",
-      "Small Business Financial Management"
+      "Financial Risk Assessment Methods"
     ]
   },
   professional: {
@@ -63,9 +57,7 @@ const contentPrompts = {
       "Executive Skills Development",
       "Performance Management Systems",
       "Industry Trend Analysis Methods",
-      "Executive Communication Techniques",
-      "Team Building Strategies",
-      "Personal Branding for Professionals"
+      "Executive Communication Techniques"
     ]
   }
 };
@@ -154,7 +146,7 @@ async function generateArticleContent(category, topic) {
   });
 }
 
-// In-memory content storage (in production, use a database)
+// In-memory content storage
 let generatedArticles = new Map();
 
 // Function to create slug from title
@@ -164,7 +156,7 @@ function createSlug(title) {
     .replace(/(^-|-$)/g, '');
 }
 
-// Enhanced content structure with both static and dynamic content
+// Static content structure
 const expertContent = {
   technology: {
     title: 'Technology Insights',
@@ -241,7 +233,6 @@ const expertContent = {
 function getAllArticles(category = null) {
   const allContent = { ...expertContent };
   
-  // Add generated articles to each category
   for (const [cat, content] of Object.entries(allContent)) {
     if (category && cat !== category) continue;
     
@@ -254,14 +245,12 @@ function getAllArticles(category = null) {
   return category ? allContent[category] : allContent;
 }
 
-// Find article by slug (static or generated)
+// Find article by slug
 function findArticleBySlug(slug) {
-  // Check generated articles first
   if (generatedArticles.has(slug)) {
     return generatedArticles.get(slug);
   }
   
-  // Check static articles
   for (const [category, content] of Object.entries(expertContent)) {
     const article = content.articles.find(a => a.slug === slug);
     if (article) {
@@ -327,16 +316,16 @@ function generateNavigation() {
   `;
 }
 
-// Generate content sections with all articles
+// Generate content sections
 function generateContentSections() {
   let sectionsHTML = '';
   const allContent = getAllArticles();
   
   for (const [category, content] of Object.entries(allContent)) {
     sectionsHTML += `
-      <section class="content-section" data-category="${category}" aria-labelledby="${category}-heading">
+      <section class="content-section" data-category="${category}">
         <div class="section-header">
-          <h2 id="${category}-heading" class="section-title">${content.title}</h2>
+          <h2 class="section-title">${content.title}</h2>
           <p class="section-description">${content.description}</p>
         </div>
         <div class="articles-grid">
@@ -371,22 +360,21 @@ function generateArticlePage(articleSlug) {
   
   if (!foundArticle) return null;
   
-  // Use generated content if available, otherwise use template content
   const articleContent = foundArticle.content || `
     <h3>Executive Summary</h3>
-    <p>This comprehensive analysis provides actionable insights based on extensive research and industry expertise. Our team has evaluated current market trends, technology developments, and best practices to deliver strategic recommendations.</p>
+    <p>This comprehensive analysis provides actionable insights based on extensive research and industry expertise.</p>
     
     <h3>Key Insights</h3>
     <div class="expert-box">
       <h4>💡 Expert Recommendation</h4>
-      <p>Based on our analysis, the most effective approach involves implementing a phased strategy that balances immediate needs with long-term objectives. This methodology has proven successful across multiple implementations.</p>
+      <p>Based on our analysis, the most effective approach involves implementing a phased strategy that balances immediate needs with long-term objectives.</p>
     </div>
     
     <h3>Implementation Strategy</h3>
-    <p>Our research indicates that successful implementation requires careful consideration of multiple factors including budget allocation, timeline management, and stakeholder alignment. The following framework provides a structured approach to achieving optimal results.</p>
+    <p>Our research indicates that successful implementation requires careful consideration of multiple factors including budget allocation, timeline management, and stakeholder alignment.</p>
     
     <h3>Recommended Solutions</h3>
-    <p>After extensive evaluation of available options, we've identified several high-quality solutions that consistently deliver superior results. Each recommendation is backed by thorough testing and real-world performance data.</p>
+    <p>After extensive evaluation of available options, we've identified several high-quality solutions that consistently deliver superior results.</p>
   `;
   
   return `
@@ -398,381 +386,250 @@ function generateArticlePage(articleSlug) {
       <title>${foundArticle.title} | Mountain Lake Insights</title>
       <meta name="description" content="${foundArticle.metaDescription || foundArticle.excerpt}">
       <meta name="keywords" content="${foundArticle.tags.join(', ')}">
-      <meta property="og:title" content="${foundArticle.title}">
-      <meta property="og:description" content="${foundArticle.excerpt}">
-      <meta property="og:type" content="article">
-      <meta name="twitter:card" content="summary_large_image">
-      <link rel="canonical" href="https://mountainlakeinsights.com">
+      ${generateStructuredData(foundArticle)}
       <style>
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
+        body { margin: 0; font-family: Georgia, serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); color: #333; line-height: 1.7; }
+        .article-container { max-width: 800px; margin: 40px auto; padding: 40px 20px; background: rgba(255,255,255,0.95); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .back-btn { background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; margin-bottom: 30px; }
+        .article-header { margin-bottom: 40px; padding-bottom: 30px; border-bottom: 2px solid #e5e7eb; }
+        .article-meta { display: flex; gap: 20px; margin-bottom: 20px; font-size: 14px; color: #6b7280; flex-wrap: wrap; }
+        .ai-badge { background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .article-title { font-size: 2.5rem; margin-bottom: 20px; color: #111827; line-height: 1.2; }
+        .article-excerpt { font-size: 1.2rem; color: #4b5563; margin-bottom: 20px; }
+        .article-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 16px; font-size: 12px; }
+        .article-content { font-size: 1.1rem; line-height: 1.8; color: #374151; }
+        .expert-box { background: linear-gradient(135deg, #f0f9ff, #e0f2fe); padding: 30px; border-radius: 12px; margin: 30px 0; border-left: 4px solid #0ea5e9; }
+        .cta-section { background: #f8fafc; padding: 30px; border-radius: 12px; margin-top: 40px; text-align: center; }
+        .cta-btn { background: #059669; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 1.1rem; text-decoration: none; display: inline-block; margin: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="article-container">
+        <a href="/" class="back-btn">← Back to Insights</a>
+        
+        <div class="article-header">
+          <div class="article-meta">
+            <span>${foundArticle.readTime}</span>
+            <span>•</span>
+            <span>${foundArticle.category}</span>
+            <span>•</span>
+            <span>Expert Analysis</span>
+            ${foundArticle.isGenerated ? '<span class="ai-badge">🤖 AI Generated</span>' : ''}
+          </div>
+          <h1 class="article-title">${foundArticle.title}</h1>
+          <p class="article-excerpt">${foundArticle.excerpt}</p>
+          <div class="article-tags">
+            ${foundArticle.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+        </div>
+        
+        <div class="article-content">
+          ${articleContent}
+          
+          <div class="cta-section">
+            <h4>Want to implement these strategies?</h4>
+            <p>Access our recommended tools and resources to get started immediately.</p>
+            <a href="#" class="cta-btn">View Recommended Solutions</a>
+            <a href="#" class="cta-btn">Schedule Expert Consultation</a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Generate content generator page
+function generateContentGeneratorPage() {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>AI Content Generator | Mountain Lake Insights</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); margin: 0; padding: 40px 20px; color: #1f2937; }
+        .generator-container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
+        select, input[type="text"] { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; }
+        .generate-btn { background: #2563eb; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+        .generate-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        .loading { text-align: center; margin: 20px 0; color: #6b7280; display: none; }
+        .success { background: #10b981; color: white; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .error { background: #ef4444; color: white; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .topic-suggestions { background: #f9fafb; padding: 15px; border-radius: 8px; margin-top: 10px; display: none; }
+        .topic-suggestion { display: inline-block; background: #e5e7eb; padding: 6px 12px; margin: 4px; border-radius: 16px; cursor: pointer; font-size: 14px; }
+        .topic-suggestion:hover { background: #d1d5db; }
+      </style>
+    </head>
+    <body>
+      <div class="generator-container">
+        <h1 style="text-align: center; margin-bottom: 30px;">AI Content Generator</h1>
+        <p style="text-align: center; color: #6b7280; margin-bottom: 40px;">Generate high-quality, professional content for your blog network using AI</p>
+        
+        <form id="contentForm">
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+              <option value="">Select a category</option>
+              <option value="technology">Technology</option>
+              <option value="wellness">Wellness</option>
+              <option value="finance">Finance</option>
+              <option value="professional">Professional Development</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="topic">Topic or Custom Topic</label>
+            <input type="text" id="topic" name="topic" placeholder="Enter a custom topic or select from suggestions below" required>
+            <div id="topicSuggestions" class="topic-suggestions"></div>
+          </div>
+          
+          <button type="submit" class="generate-btn" id="generateBtn">Generate Article</button>
+          
+          <div id="loading" class="loading">Generating content... This may take 30-60 seconds.</div>
+          <div id="result"></div>
+        </form>
+        
+        <p style="text-align: center; margin-top: 40px;"><a href="/" style="color: #2563eb;">← Back to Home</a></p>
+      </div>
+      
+      <script>
+        const categorySelect = document.getElementById('category');
+        const topicInput = document.getElementById('topic');
+        const topicSuggestions = document.getElementById('topicSuggestions');
+        const form = document.getElementById('contentForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        
+        const suggestions = ${JSON.stringify(contentPrompts)};
+        
+        categorySelect.addEventListener('change', function() {
+          const category = this.value;
+          if (category && suggestions[category]) {
+            topicSuggestions.innerHTML = suggestions[category].topics
+              .map(topic => \`<span class="topic-suggestion" onclick="selectTopic('\${topic}')">\${topic}</span>\`)
+              .join('');
+            topicSuggestions.style.display = 'block';
+          } else {
+            topicSuggestions.style.display = 'none';
+          }
+        });
+        
+        function selectTopic(topic) {
+          topicInput.value = topic;
         }
         
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-          color: #1f2937;
-          line-height: 1.6;
-        }
-        
-        .main-nav {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
-          border-bottom: 1px solid rgba(229, 231, 235, 0.8);
-          position: sticky;
-          top: 0;
-          z-index: 100;
-        }
-        
-        .nav-container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 20px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          height: 70px;
-        }
-        
-        .logo h1 a {
-          color: #1f2937;
-          text-decoration: none;
-          font-size: 1.5rem;
-          font-weight: 700;
-        }
-        
-        .nav-menu {
-          display: flex;
-          list-style: none;
-          gap: 30px;
-        }
-        
-        .nav-link {
-          color: #4b5563;
-          text-decoration: none;
-          font-weight: 500;
-          transition: color 0.3s ease;
-          position: relative;
-        }
-        
-        .nav-link:hover {
-          color: #2563eb;
-        }
-        
-        .nav-link::after {
-          content: '';
-          position: absolute;
-          bottom: -5px;
-          left: 0;
-          width: 0;
-          height: 2px;
-          background: #2563eb;
-          transition: width 0.3s ease;
-        }
-        
-        .nav-link:hover::after {
-          width: 100%;
-        }
-        
-        .search-container {
-          display: flex;
-          align-items: center;
-          background: #f9fafb;
-          border-radius: 8px;
-          padding: 8px 12px;
-          border: 1px solid #e5e7eb;
-        }
-        
-        .search-input {
-          border: none;
-          background: none;
-          outline: none;
-          padding: 4px 8px;
-          font-size: 14px;
-          width: 200px;
-        }
-        
-        .search-btn {
-          border: none;
-          background: none;
-          cursor: pointer;
-          padding: 4px;
-          color: #6b7280;
-        }
-        
-        .hero-section {
-          text-align: center;
-          padding: 80px 20px;
-          max-width: 800px;
-          margin: 0 auto;
-        }
-        
-        .hero-title {
-          font-size: 3rem;
-          font-weight: 800;
-          margin-bottom: 20px;
-          color: #111827;
-          line-height: 1.1;
-        }
-        
-        .hero-subtitle {
-          font-size: 1.25rem;
-          color: #6b7280;
-          margin-bottom: 40px;
-          max-width: 600px;
-          margin-left: auto;
-          margin-right: auto;
-        }
-        
-        .hero-cta {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          flex-wrap: wrap;
-        }
-        
-        .cta-primary {
-          background: #2563eb;
-          color: white;
-          padding: 12px 24px;
-          border-radius: 8px;
-          text-decoration: none;
-          font-weight: 600;
-          transition: all 0.3s ease;
-        }
-        
-        .cta-primary:hover {
-          background: #1d4ed8;
-          transform: translateY(-1px);
-        }
-        
-        .cta-secondary {
-          background: transparent;
-          color: #2563eb;
-          padding: 12px 24px;
-          border: 2px solid #2563eb;
-          border-radius: 8px;
-          text-decoration: none;
-          font-weight: 600;
-          transition: all 0.3s ease;
-        }
-        
-        .cta-secondary:hover {
-          background: #2563eb;
-          color: white;
-        }
-        
-        .cta-ai {
-          background: #10b981;
-          color: white;
-          padding: 12px 24px;
-          border-radius: 8px;
-          text-decoration: none;
-          font-weight: 600;
-          transition: all 0.3s ease;
-        }
-        
-        .cta-ai:hover {
-          background: #059669;
-          transform: translateY(-1px);
-        }
-        
-        .container {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0 20px;
-        }
-        
-        .content-section {
-          margin: 60px 0;
-          background: rgba(255, 255, 255, 0.8);
-          border-radius: 16px;
-          padding: 40px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
-        
-        .section-header {
-          text-align: center;
-          margin-bottom: 50px;
-        }
-        
-        .section-title {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin-bottom: 15px;
-          color: #111827;
-        }
-        
-        .section-description {
-          font-size: 1.1rem;
-          color: #6b7280;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-        
-        .articles-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-          gap: 30px;
-        }
-        
-        .article-card {
-          background: white;
-          border-radius: 12px;
-          padding: 30px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          border: 1px solid #e5e7eb;
-          position: relative;
-          overflow: hidden;
-        }
-        
-        .article-card.generated {
-          border-left: 4px solid #10b981;
-        }
-        
-        .article-card::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 4px;
-          background: linear-gradient(90deg, #2563eb, #3b82f6);
-          transform: scaleX(0);
-          transition: transform 0.3s ease;
-        }
-        
-        .article-card.generated::before {
-          background: linear-gradient(90deg, #10b981, #059669);
-        }
-        
-        .article-card:hover::before {
-          transform: scaleX(1);
-        }
-        
-        .article-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-          border-color: #d1d5db;
-        }
-        
-        .article-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-          font-size: 14px;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-        
-        .read-time {
-          color: #6b7280;
-          font-weight: 500;
-        }
-        
-        .category-tag {
-          background: #dbeafe;
-          color: #1e40af;
-          padding: 4px 12px;
-          border-radius: 16px;
-          font-weight: 600;
-          font-size: 12px;
-        }
-        
-        .ai-badge {
-          background: #10b981;
-          color: white;
-          padding: 2px 8px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: 600;
-        }
-        
-        .article-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-bottom: 15px;
-          color: #111827;
-          line-height: 1.3;
-        }
-        
-        .article-excerpt {
-          color: #4b5563;
-          margin-bottom: 20px;
-          line-height: 1.6;
-        }
-        
-        .article-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-bottom: 20px;
-        }
-        
-        .tag {
-          background: #f3f4f6;
-          color: #374151;
-          padding: 4px 8px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-        
-        .article-cta {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        
-        .read-more {
-          color: #2563eb;
-          font-weight: 600;
-          font-size: 14px;
-        }
-        
-        .generated .read-more {
-          color: #10b981;
-        }
-        
-        .stats-section {
-          background: linear-gradient(135deg, #1e40af, #3b82f6);
-          color: white;
-          padding: 60px 20px;
-          margin: 80px 0;
-          border-radius: 16px;
-          text-align: center;
-        }
-        
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 40px;
-          max-width: 800px;
-          margin: 0 auto;
-        }
-        
-        .stat-item h3 {
-          font-size: 2.5rem;
-          font-weight: 800;
-          margin-bottom: 10px;
-        }
-        
-        .stat-item p {
-          opacity: 0.9;
-          font-weight: 500;
-        }
-        
-        @media (max-width: 768px) {
-          .hero-title { font-size: 2rem; }
-          .nav-menu { display: none; }
-          .search-container { width: 100%; }
-          .articles-grid { grid-template-columns: 1fr; }
-          .hero-cta { flex-direction: column; align-items: center; }
-        }
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(form);
+          const category = formData.get('category');
+          const topic = formData.get('topic');
+          
+          generateBtn.disabled = true;
+          loading.style.display = 'block';
+          result.innerHTML = '';
+          
+          try {
+            const response = await fetch('/api/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ category, topic })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              result.innerHTML = \`
+                <div class="success">
+                  <h3>Content Generated Successfully!</h3>
+                  <p><strong>Title:</strong> \${data.article.title}</p>
+                  <p><strong>Slug:</strong> \${data.article.slug}</p>
+                  <p><strong>Read Time:</strong> \${data.article.readTime}</p>
+                  <p><a href="/insights/\${data.article.slug}" target="_blank" style="color: white; text-decoration: underline;">View Article →</a></p>
+                </div>
+              \`;
+            } else {
+              throw new Error(data.error || 'Generation failed');
+            }
+          } catch (error) {
+            result.innerHTML = \`
+              <div class="error">
+                <h3>Generation Failed</h3>
+                <p>\${error.message}</p>
+              </div>
+            \`;
+          } finally {
+            generateBtn.disabled = false;
+            loading.style.display = 'none';
+          }
+        });
+      </script>
+    </body>
+    </html>
+  `;
+}
+
+// Main page
+function generateMainPage() {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Mountain Lake Insights | Expert Analysis & AI-Generated Content</title>
+      <meta name="description" content="Professional insights and AI-generated content across technology, wellness, finance, and career development.">
+      <meta name="twitter:card" content="summary_large_image">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); color: #1f2937; line-height: 1.6; }
+        .main-nav { background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(229,231,235,0.8); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 70px; }
+        .logo h1 a { color: #1f2937; text-decoration: none; font-size: 1.5rem; font-weight: 700; }
+        .nav-menu { display: flex; list-style: none; gap: 30px; }
+        .nav-link { color: #4b5563; text-decoration: none; font-weight: 500; }
+        .nav-link:hover { color: #2563eb; }
+        .search-container { display: flex; align-items: center; background: #f9fafb; border-radius: 8px; padding: 8px 12px; border: 1px solid #e5e7eb; }
+        .search-input { border: none; background: none; outline: none; padding: 4px 8px; font-size: 14px; width: 200px; }
+        .search-btn { border: none; background: none; cursor: pointer; padding: 4px; color: #6b7280; }
+        .hero-section { text-align: center; padding: 80px 20px; max-width: 800px; margin: 0 auto; }
+        .hero-title { font-size: 3rem; font-weight: 800; margin-bottom: 20px; color: #111827; line-height: 1.1; }
+        .hero-subtitle { font-size: 1.25rem; color: #6b7280; margin-bottom: 40px; }
+        .hero-cta { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .cta-primary { background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        .cta-ai { background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        .cta-secondary { background: transparent; color: #2563eb; padding: 12px 24px; border: 2px solid #2563eb; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .content-section { margin: 60px 0; background: rgba(255,255,255,0.8); border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .section-header { text-align: center; margin-bottom: 50px; }
+        .section-title { font-size: 2.5rem; font-weight: 700; margin-bottom: 15px; color: #111827; }
+        .section-description { font-size: 1.1rem; color: #6b7280; max-width: 600px; margin: 0 auto; }
+        .articles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
+        .article-card { background: white; border-radius: 12px; padding: 30px; cursor: pointer; transition: all 0.3s ease; border: 1px solid #e5e7eb; }
+        .article-card.generated { border-left: 4px solid #10b981; }
+        .article-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+        .article-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 14px; flex-wrap: wrap; gap: 10px; }
+        .read-time { color: #6b7280; font-weight: 500; }
+        .category-tag { background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 16px; font-weight: 600; font-size: 12px; }
+        .ai-badge { background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .article-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 15px; color: #111827; line-height: 1.3; }
+        .article-excerpt { color: #4b5563; margin-bottom: 20px; line-height: 1.6; }
+        .article-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .tag { background: #f3f4f6; color: #374151; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 500; }
+        .article-cta { display: flex; justify-content: space-between; align-items: center; }
+        .read-more { color: #2563eb; font-weight: 600; font-size: 14px; }
+        .generated .read-more { color: #10b981; }
+        .stats-section { background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; padding: 60px 20px; margin: 80px 0; border-radius: 16px; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; max-width: 800px; margin: 0 auto; }
+        .stat-item h3 { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; }
+        .stat-item p { opacity: 0.9; font-weight: 500; }
+        @media (max-width: 768px) { .hero-title { font-size: 2rem; } .nav-menu { display: none; } .articles-grid { grid-template-columns: 1fr; } .hero-cta { flex-direction: column; align-items: center; } }
       </style>
     </head>
     <body>
@@ -792,22 +649,10 @@ function generateArticlePage(articleSlug) {
         <div class="container">
           <h2 style="margin-bottom: 40px; font-size: 2rem;">Powered by AI, Trusted by Professionals</h2>
           <div class="stats-grid">
-            <div class="stat-item">
-              <h3>50K+</h3>
-              <p>Monthly Readers</p>
-            </div>
-            <div class="stat-item">
-              <h3>200+</h3>
-              <p>Expert Articles</p>
-            </div>
-            <div class="stat-item">
-              <h3>AI</h3>
-              <p>Content Generation</p>
-            </div>
-            <div class="stat-item">
-              <h3>95%</h3>
-              <p>Reader Satisfaction</p>
-            </div>
+            <div class="stat-item"><h3>50K+</h3><p>Monthly Readers</p></div>
+            <div class="stat-item"><h3>200+</h3><p>Expert Articles</p></div>
+            <div class="stat-item"><h3>AI</h3><p>Content Generation</p></div>
+            <div class="stat-item"><h3>95%</h3><p>Reader Satisfaction</p></div>
           </div>
         </div>
       </div>
@@ -817,7 +662,6 @@ function generateArticlePage(articleSlug) {
       </div>
       
       <script>
-        // Enhanced keyboard navigation
         document.addEventListener('keydown', function(e) {
           if (e.key === 'Enter' || e.key === ' ') {
             if (e.target.classList.contains('article-card')) {
@@ -826,21 +670,15 @@ function generateArticlePage(articleSlug) {
           }
         });
         
-        // Search functionality
         document.querySelector('.search-btn').addEventListener('click', function() {
           const query = document.querySelector('.search-input').value;
-          if (query) {
-            console.log('Searching for:', query);
-          }
+          if (query) console.log('Searching for:', query);
         });
         
-        // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
           anchor.addEventListener('click', function (e) {
             e.preventDefault();
-            document.querySelector(this.getAttribute('href')).scrollIntoView({
-              behavior: 'smooth'
-            });
+            document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
           });
         });
       </script>
@@ -854,7 +692,7 @@ const server = http.createServer(async (req, res) => {
   const pathname = requestUrl.pathname;
   const method = req.method;
   
-  // Health check endpoint
+  // Health check
   if (pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -896,17 +734,13 @@ const server = http.createServer(async (req, res) => {
         
         if (!OPENAI_API_KEY || OPENAI_API_KEY === 'your-openai-api-key-here') {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ 
-            success: false, 
-            error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.' 
-          }));
+          res.end(JSON.stringify({ success: false, error: 'OpenAI API key not configured' }));
           return;
         }
         
         const generatedContent = await generateArticleContent(category, topic);
         const slug = createSlug(generatedContent.title);
         
-        // Create article object with generated content
         const article = {
           title: generatedContent.title,
           slug: slug,
@@ -920,32 +754,21 @@ const server = http.createServer(async (req, res) => {
           datePublished: new Date().toISOString()
         };
         
-        // Store in memory
         generatedArticles.set(slug, article);
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: true, 
-          article: { 
-            title: article.title, 
-            slug: article.slug,
-            readTime: article.readTime
-          } 
-        }));
+        res.end(JSON.stringify({ success: true, article: { title: article.title, slug: article.slug, readTime: article.readTime } }));
         
       } catch (error) {
         console.error('Content generation error:', error);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ 
-          success: false, 
-          error: error.message || 'Content generation failed' 
-        }));
+        res.end(JSON.stringify({ success: false, error: error.message || 'Content generation failed' }));
       }
     });
     return;
   }
   
-  // Individual insight/article pages
+  // Individual articles
   if (pathname.startsWith('/insights/')) {
     const articleSlug = pathname.split('/insights/')[1];
     const articleContent = generateArticlePage(articleSlug);
@@ -957,7 +780,7 @@ const server = http.createServer(async (req, res) => {
     }
   }
   
-  // Categories API (enhanced with generated content)
+  // Categories API
   if (pathname === '/categories') {
     const allContent = getAllArticles();
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -965,7 +788,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   
-  // Newsletter signup page
+  // Newsletter page
   if (pathname === '/newsletter') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`
@@ -975,71 +798,23 @@ const server = http.createServer(async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Newsletter | Mountain Lake Insights</title>
-        <meta name="description" content="Subscribe to our weekly newsletter for expert insights and professional analysis.">
         <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            color: white;
-          }
-          .newsletter-container {
-            background: rgba(255,255,255,0.95);
-            color: #333;
-            padding: 50px;
-            border-radius: 16px;
-            max-width: 500px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-          }
-          .newsletter-title {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: #1f2937;
-          }
-          .newsletter-form {
-            margin-top: 30px;
-          }
-          .form-input {
-            width: 100%;
-            padding: 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 16px;
-          }
-          .subscribe-btn {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.3s ease;
-          }
-          .subscribe-btn:hover {
-            background: #1d4ed8;
-          }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; color: white; }
+          .newsletter-container { background: rgba(255,255,255,0.95); color: #333; padding: 50px; border-radius: 16px; max-width: 500px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+          .newsletter-title { font-size: 2rem; margin-bottom: 20px; color: #1f2937; }
+          .form-input { width: 100%; padding: 15px; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 20px; font-size: 16px; }
+          .subscribe-btn { background: #2563eb; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; }
         </style>
       </head>
       <body>
         <div class="newsletter-container">
           <h1 class="newsletter-title">Stay Informed</h1>
-          <p>Get weekly expert insights and AI-generated content delivered to your inbox. Join 50,000+ professionals who trust our analysis.</p>
-          <form class="newsletter-form">
+          <p>Get weekly expert insights and AI-generated content delivered to your inbox.</p>
+          <form style="margin-top: 30px;">
             <input type="email" placeholder="Enter your email" class="form-input" required>
-            <input type="text" placeholder="Your role/industry (optional)" class="form-input">
             <button type="submit" class="subscribe-btn">Subscribe to Newsletter</button>
           </form>
-          <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
-            <a href="/" style="color: #2563eb;">← Back to Insights</a>
-          </p>
+          <p style="margin-top: 20px;"><a href="/" style="color: #2563eb;">← Back to Insights</a></p>
         </div>
       </body>
       </html>
@@ -1057,92 +832,38 @@ const server = http.createServer(async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Our Experts | Mountain Lake Insights</title>
-        <meta name="description" content="Meet our team of industry experts and AI-powered content generation.">
         <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            margin: 0;
-            padding: 40px 20px;
-            color: #1f2937;
-          }
-          .experts-container {
-            max-width: 1000px;
-            margin: 0 auto;
-          }
-          .experts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-          }
-          .expert-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            text-align: center;
-          }
-          .expert-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3b82f6, #1e40af);
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: white;
-          }
-          .ai-card {
-            border: 2px solid #10b981;
-          }
-          .ai-card .expert-avatar {
-            background: linear-gradient(135deg, #10b981, #059669);
-          }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); margin: 0; padding: 40px 20px; color: #1f2937; }
+          .experts-container { max-width: 1000px; margin: 0 auto; }
+          .experts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px; }
+          .expert-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; }
+          .expert-avatar { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1e40af); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; }
+          .ai-card { border: 2px solid #10b981; }
+          .ai-card .expert-avatar { background: linear-gradient(135deg, #10b981, #059669); }
         </style>
       </head>
       <body>
         <div class="experts-container">
           <h1 style="text-align: center; font-size: 2.5rem; margin-bottom: 20px;">Our Expert Team</h1>
-          <p style="text-align: center; color: #6b7280; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
-            Our insights combine human expertise with AI-powered content generation for comprehensive, up-to-date analysis.
-          </p>
+          <p style="text-align: center; color: #6b7280; font-size: 1.1rem; margin: 0 auto 40px; max-width: 600px;">Our insights combine human expertise with AI-powered content generation.</p>
           
           <div class="experts-grid">
             <div class="expert-card">
               <div class="expert-avatar">👨‍💼</div>
               <h3>Dr. Michael Chen</h3>
               <p style="color: #2563eb; font-weight: 600;">Technology Strategy</p>
-              <p style="color: #6b7280;">Former CTO at Fortune 500 companies. 15+ years in enterprise technology and digital transformation.</p>
-            </div>
-            
-            <div class="expert-card">
-              <div class="expert-avatar">👩‍⚕️</div>
-              <h3>Dr. Sarah Johnson</h3>
-              <p style="color: #059669; font-weight: 600;">Wellness & Health</p>
-              <p style="color: #6b7280;">Certified nutritionist and wellness consultant. Published researcher in preventive medicine.</p>
-            </div>
-            
-            <div class="expert-card">
-              <div class="expert-avatar">👨‍💰</div>
-              <h3>Robert Martinez</h3>
-              <p style="color: #dc2626; font-weight: 600;">Financial Strategy</p>
-              <p style="color: #6b7280;">Former investment banker and financial advisor. Specializes in portfolio management and risk assessment.</p>
+              <p style="color: #6b7280;">Former CTO with 15+ years in enterprise technology.</p>
             </div>
             
             <div class="expert-card ai-card">
               <div class="expert-avatar">🤖</div>
               <h3>AI Content Generator</h3>
               <p style="color: #10b981; font-weight: 600;">Powered by GPT-4</p>
-              <p style="color: #6b7280;">Advanced AI system that generates professional, actionable content across all our expertise areas on demand.</p>
+              <p style="color: #6b7280;">Advanced AI system generating professional content across all expertise areas.</p>
             </div>
           </div>
           
-          <p style="text-align: center; margin-top: 40px;">
-            <a href="/" style="color: #2563eb; text-decoration: none;">← Back to Insights</a>
-          </p>
+          <p style="text-align: center; margin-top: 40px;"><a href="/" style="color: #2563eb;">← Back to Insights</a></p>
         </div>
       </body>
       </html>
@@ -1150,49 +871,22 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   
-  // Enhanced sitemap with generated content
+  // Enhanced sitemap
   if (pathname === '/sitemap.xml') {
     const staticUrls = Object.values(expertContent).flatMap(category => 
-      category.articles.map(article => `
-  <url>
-    <loc>https://mountainlakeinsights.com/insights/${article.slug}</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>`).join('')
+      category.articles.map(article => `  <url><loc>https://mountainlakeinsights.com/insights/${article.slug}</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>`).join('\n')
     );
     
-    const generatedUrls = Array.from(generatedArticles.values()).map(article => `
-  <url>
-    <loc>https://mountainlakeinsights.com/insights/${article.slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <lastmod>${article.datePublished}</lastmod>
-  </url>`).join('');
+    const generatedUrls = Array.from(generatedArticles.values()).map(article => `  <url><loc>https://mountainlakeinsights.com/insights/${article.slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority><lastmod>${article.datePublished}</lastmod></url>`).join('\n');
     
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://mountainlakeinsights.com/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://mountainlakeinsights.com/experts</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://mountainlakeinsights.com/generate</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://mountainlakeinsights.com/newsletter</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  ${staticUrls}
-  ${generatedUrls}
+  <url><loc>https://mountainlakeinsights.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://mountainlakeinsights.com/experts</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://mountainlakeinsights.com/generate</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://mountainlakeinsights.com/newsletter</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+${staticUrls}
+${generatedUrls}
 </urlset>`;
     
     res.writeHead(200, { 'Content-Type': 'application/xml' });
@@ -1202,34 +896,14 @@ const server = http.createServer(async (req, res) => {
   
   // Robots.txt
   if (pathname === '/robots.txt') {
-    const robotsTxt = `User-agent: *
-Allow: /
-Sitemap: https://mountainlakeinsights.com/sitemap.xml
-
-# Allow AI content generation
-Allow: /generate
-Allow: /api/generate
-
-# Block admin areas
-Disallow: /admin/
-Disallow: /private/`;
-    
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end(robotsTxt);
+    res.end('User-agent: *\nAllow: /\nSitemap: https://mountainlakeinsights.com/sitemap.xml');
     return;
   }
   
   // 404 handler
   res.writeHead(404, { 'Content-Type': 'text/html' });
-  res.end(`
-    <html>
-      <body style="font-family: Arial; text-align: center; margin-top: 100px;">
-        <h1>404 - Page Not Found</h1>
-        <p>The page you're looking for doesn't exist.</p>
-        <a href="/" style="color: #2563eb; text-decoration: none;">← Back to Home</a>
-      </body>
-    </html>
-  `);
+  res.end('<html><body style="font-family: Arial; text-align: center; margin-top: 100px;"><h1>404 - Page Not Found</h1><p><a href="/" style="color: #2563eb;">← Back to Home</a></p></body></html>');
 });
 
 server.listen(PORT, () => {
@@ -1247,441 +921,6 @@ server.listen(PORT, () => {
   console.log(`   - /categories (Content API with generated articles)`);
   console.log(`   - /sitemap.xml (Enhanced SEO sitemap)`);
   console.log(`   - /robots.txt (Search engine directives)`);
-  console.log(`📈 Features: SEO optimization, structured data, AI content generation`);
   console.log(`🤖 OpenAI Integration: ${OPENAI_API_KEY && OPENAI_API_KEY !== 'your-openai-api-key-here' ? 'ENABLED' : 'DISABLED - Set OPENAI_API_KEY'}`);
   console.log(`🎯 Content Focus: Expert insights enhanced with AI`);
-});summary_large_image">
-      <meta name="twitter:title" content="${foundArticle.title}">
-      <meta name="twitter:description" content="${foundArticle.excerpt}">
-      ${generateStructuredData(foundArticle)}
-      <style>
-        body {
-          margin: 0;
-          font-family: 'Georgia', 'Times New Roman', serif;
-          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-          color: #333;
-          line-height: 1.7;
-        }
-        
-        .article-container {
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 40px 20px;
-          background: rgba(255, 255, 255, 0.95);
-          border-radius: 12px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-          margin-top: 40px;
-        }
-        
-        .back-nav {
-          margin-bottom: 30px;
-        }
-        
-        .back-btn {
-          background: #2563eb;
-          border: none;
-          color: white;
-          padding: 12px 24px;
-          border-radius: 8px;
-          text-decoration: none;
-          display: inline-block;
-          transition: all 0.3s ease;
-          font-weight: 500;
-        }
-        
-        .back-btn:hover {
-          background: #1d4ed8;
-          transform: translateY(-1px);
-        }
-        
-        .article-header {
-          margin-bottom: 40px;
-          padding-bottom: 30px;
-          border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .article-meta {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 20px;
-          font-size: 14px;
-          color: #6b7280;
-          flex-wrap: wrap;
-        }
-        
-        .ai-badge {
-          background: #10b981;
-          color: white;
-          padding: 2px 8px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: 600;
-        }
-        
-        .article-title {
-          font-size: 2.5rem;
-          margin-bottom: 20px;
-          color: #111827;
-          line-height: 1.2;
-        }
-        
-        .article-excerpt {
-          font-size: 1.2rem;
-          color: #4b5563;
-          margin-bottom: 20px;
-        }
-        
-        .article-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-        
-        .tag {
-          background: #dbeafe;
-          color: #1e40af;
-          padding: 4px 12px;
-          border-radius: 16px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-        
-        .article-content {
-          font-size: 1.1rem;
-          line-height: 1.8;
-          color: #374151;
-        }
-        
-        .article-content h3 {
-          margin-top: 40px;
-          margin-bottom: 20px;
-          color: #111827;
-        }
-        
-        .expert-box {
-          background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-          padding: 30px;
-          border-radius: 12px;
-          margin: 30px 0;
-          border-left: 4px solid #0ea5e9;
-        }
-        
-        .cta-section {
-          background: #f8fafc;
-          padding: 30px;
-          border-radius: 12px;
-          margin-top: 40px;
-          text-align: center;
-        }
-        
-        .cta-btn {
-          background: #059669;
-          color: white;
-          border: none;
-          padding: 15px 30px;
-          border-radius: 8px;
-          font-size: 1.1rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          text-decoration: none;
-          display: inline-block;
-          margin: 10px;
-        }
-        
-        .cta-btn:hover {
-          background: #047857;
-          transform: translateY(-1px);
-        }
-      </style>
-    </head>
-    <body>
-      <div class="article-container">
-        <div class="back-nav">
-          <a href="/" class="back-btn">← Back to Insights</a>
-        </div>
-        
-        <div class="article-header">
-          <div class="article-meta">
-            <span>${foundArticle.readTime}</span>
-            <span>•</span>
-            <span>${foundArticle.category}</span>
-            <span>•</span>
-            <span>Expert Analysis</span>
-            ${foundArticle.isGenerated ? '<span class="ai-badge">🤖 AI Generated</span>' : ''}
-          </div>
-          <h1 class="article-title">${foundArticle.title}</h1>
-          <p class="article-excerpt">${foundArticle.excerpt}</p>
-          <div class="article-tags">
-            ${foundArticle.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-          </div>
-        </div>
-        
-        <div class="article-content">
-          ${articleContent}
-          
-          <div class="cta-section">
-            <h4>Want to implement these strategies?</h4>
-            <p>Access our recommended tools and resources to get started immediately.</p>
-            <a href="#" class="cta-btn" onclick="window.open('https://example.com/recommended-tools', '_blank')">
-              View Recommended Solutions
-            </a>
-            <a href="#" class="cta-btn" onclick="window.open('https://example.com/expert-consultation', '_blank')">
-              Schedule Expert Consultation
-            </a>
-          </div>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-}
-
-// Generate content generation page
-function generateContentGeneratorPage() {
-  return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>AI Content Generator | Mountain Lake Insights</title>
-      <meta name="description" content="Generate high-quality, professional content using AI for your blog network.">
-      <style>
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-          margin: 0;
-          padding: 40px 20px;
-          color: #1f2937;
-        }
-        .generator-container {
-          max-width: 800px;
-          margin: 0 auto;
-          background: white;
-          padding: 40px;
-          border-radius: 16px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-        .form-group {
-          margin-bottom: 25px;
-        }
-        label {
-          display: block;
-          margin-bottom: 8px;
-          font-weight: 600;
-          color: #374151;
-        }
-        select, input[type="text"] {
-          width: 100%;
-          padding: 12px;
-          border: 2px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 16px;
-          transition: border-color 0.3s ease;
-        }
-        select:focus, input[type="text"]:focus {
-          outline: none;
-          border-color: #2563eb;
-        }
-        .generate-btn {
-          background: #2563eb;
-          color: white;
-          border: none;
-          padding: 15px 30px;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          width: 100%;
-          transition: all 0.3s ease;
-        }
-        .generate-btn:hover {
-          background: #1d4ed8;
-          transform: translateY(-1px);
-        }
-        .generate-btn:disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-          transform: none;
-        }
-        .loading {
-          text-align: center;
-          margin: 20px 0;
-          color: #6b7280;
-        }
-        .success {
-          background: #10b981;
-          color: white;
-          padding: 15px;
-          border-radius: 8px;
-          margin-top: 20px;
-        }
-        .error {
-          background: #ef4444;
-          color: white;
-          padding: 15px;
-          border-radius: 8px;
-          margin-top: 20px;
-        }
-        .topic-suggestions {
-          background: #f9fafb;
-          padding: 15px;
-          border-radius: 8px;
-          margin-top: 10px;
-        }
-        .topic-suggestion {
-          display: inline-block;
-          background: #e5e7eb;
-          padding: 6px 12px;
-          margin: 4px;
-          border-radius: 16px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: background-color 0.2s ease;
-        }
-        .topic-suggestion:hover {
-          background: #d1d5db;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="generator-container">
-        <h1 style="text-align: center; margin-bottom: 30px;">AI Content Generator</h1>
-        <p style="text-align: center; color: #6b7280; margin-bottom: 40px;">
-          Generate high-quality, professional content for your blog network using AI
-        </p>
-        
-        <form id="contentForm">
-          <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category" name="category" required>
-              <option value="">Select a category</option>
-              <option value="technology">Technology</option>
-              <option value="wellness">Wellness</option>
-              <option value="finance">Finance</option>
-              <option value="professional">Professional Development</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label for="topic">Topic or Custom Topic</label>
-            <input type="text" id="topic" name="topic" placeholder="Enter a custom topic or select from suggestions below" required>
-            <div id="topicSuggestions" class="topic-suggestions" style="display: none;"></div>
-          </div>
-          
-          <button type="submit" class="generate-btn" id="generateBtn">
-            Generate Article
-          </button>
-          
-          <div id="loading" class="loading" style="display: none;">
-            Generating content... This may take 30-60 seconds.
-          </div>
-          
-          <div id="result"></div>
-        </form>
-        
-        <p style="text-align: center; margin-top: 40px;">
-          <a href="/" style="color: #2563eb; text-decoration: none;">← Back to Home</a>
-        </p>
-      </div>
-      
-      <script>
-        const categorySelect = document.getElementById('category');
-        const topicInput = document.getElementById('topic');
-        const topicSuggestions = document.getElementById('topicSuggestions');
-        const form = document.getElementById('contentForm');
-        const generateBtn = document.getElementById('generateBtn');
-        const loading = document.getElementById('loading');
-        const result = document.getElementById('result');
-        
-        const suggestions = {
-          technology: ${JSON.stringify(contentPrompts.technology.topics)},
-          wellness: ${JSON.stringify(contentPrompts.wellness.topics)},
-          finance: ${JSON.stringify(contentPrompts.finance.topics)},
-          professional: ${JSON.stringify(contentPrompts.professional.topics)}
-        };
-        
-        categorySelect.addEventListener('change', function() {
-          const category = this.value;
-          if (category && suggestions[category]) {
-            topicSuggestions.innerHTML = suggestions[category]
-              .map(topic => \`<span class="topic-suggestion" onclick="selectTopic('\${topic}')">\${topic}</span>\`)
-              .join('');
-            topicSuggestions.style.display = 'block';
-          } else {
-            topicSuggestions.style.display = 'none';
-          }
-        });
-        
-        function selectTopic(topic) {
-          topicInput.value = topic;
-        }
-        
-        form.addEventListener('submit', async function(e) {
-          e.preventDefault();
-          
-          const formData = new FormData(form);
-          const category = formData.get('category');
-          const topic = formData.get('topic');
-          
-          generateBtn.disabled = true;
-          loading.style.display = 'block';
-          result.innerHTML = '';
-          
-          try {
-            const response = await fetch('/api/generate', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ category, topic })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-              result.innerHTML = \`
-                <div class="success">
-                  <h3>Content Generated Successfully!</h3>
-                  <p><strong>Title:</strong> \${data.article.title}</p>
-                  <p><strong>Slug:</strong> \${data.article.slug}</p>
-                  <p><strong>Read Time:</strong> \${data.article.readTime}</p>
-                  <p><a href="/insights/\${data.article.slug}" target="_blank" style="color: white; text-decoration: underline;">View Article →</a></p>
-                </div>
-              \`;
-            } else {
-              throw new Error(data.error || 'Generation failed');
-            }
-          } catch (error) {
-            result.innerHTML = \`
-              <div class="error">
-                <h3>Generation Failed</h3>
-                <p>\${error.message}</p>
-              </div>
-            \`;
-          } finally {
-            generateBtn.disabled = false;
-            loading.style.display = 'none';
-          }
-        });
-      </script>
-    </body>
-    </html>
-  `;
-}
-
-// Main page with enhanced styling for generated content
-function generateMainPage() {
-  return `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Mountain Lake Insights | Expert Analysis & AI-Generated Content</title>
-      <meta name="description" content="Professional insights and expert analysis across technology, wellness, finance, and career development. Enhanced with AI-generated content.">
-      <meta name="keywords" content="professional insights, expert analysis, AI content, technology trends, wellness guides, financial strategy, career development">
-      <meta property="og:title" content="Mountain Lake Insights - Expert Professional Analysis">
-      <meta property="og:description" content="Evidence-based professional insights and expert analysis to guide your strategic decisions.">
-      <meta property="og:type" content="website">
-      <meta name="twitter:card" content="
+});
